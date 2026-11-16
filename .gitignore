@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Local SQLite databases (created dynamically in /tmp on Vercel or locally)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment & OS
+.env
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Vercel output
+.vercel/
