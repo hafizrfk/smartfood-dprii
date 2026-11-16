@@ -64,6 +64,14 @@ function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS food_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      icon TEXT DEFAULT '🏷️',
+      description TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS food_consumption_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       participant_id INTEGER NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
@@ -124,6 +132,34 @@ function initDatabase() {
   const existingConfig = db.prepare('SELECT value FROM system_settings WHERE key = ?').get('event_name');
   if (!existingConfig) {
     seedInitialData();
+  }
+
+  // Ensure default categories exist
+  seedDefaultCategories();
+}
+
+const DEFAULT_CATEGORIES = [
+  { name: 'Snack Biskuit', icon: '🍪', description: 'Biskuit manis dan cookies renyah' },
+  { name: 'Snack Jagung', icon: '🌽', description: 'Snack ekstrudat rasa jagung bakar & keju' },
+  { name: 'Snack Gurih', icon: '🍝', description: 'Makaroni pedas, keripik & camilan asin' },
+  { name: 'Biskuit Manis', icon: '🍘', description: 'Malkist, crackers bertabur gula dan kelapa' },
+  { name: 'Cokelat Wafer', icon: '🍫', description: 'Wafer berlapis cokelat tebal & karamel' },
+  { name: 'Snack Keju', icon: '🧀', description: 'Snack bola keju & stick keju gurih' },
+  { name: 'Makanan Berat', icon: '🍱', description: 'Nasi kotak, bento, dan hidangan utama' },
+  { name: 'Minuman Segar', icon: '🧃', description: 'Kopi, teh kemasan, susu & air mineral' }
+];
+
+function seedDefaultCategories() {
+  try {
+    const count = db.prepare('SELECT COUNT(*) as count FROM food_categories').get().count;
+    if (count === 0) {
+      const insertCat = db.prepare('INSERT OR IGNORE INTO food_categories (name, icon, description) VALUES (?, ?, ?)');
+      for (const c of DEFAULT_CATEGORIES) {
+        insertCat.run(c.name, c.icon, c.description);
+      }
+    }
+  } catch (err) {
+    console.error('Error seeding default categories:', err);
   }
 }
 
@@ -262,17 +298,88 @@ function seedInitialData() {
 }
 
 // -------------------------------------------------------------
+// Food Categories APIs
+// -------------------------------------------------------------
+
+function getCategories() {
+  return db.prepare(`
+    SELECT c.*, COUNT(f.id) AS food_count
+    FROM food_categories c
+    LEFT JOIN food_items f ON LOWER(f.category) = LOWER(c.name)
+    GROUP BY c.id
+    ORDER BY c.name ASC
+  `).all();
+}
+
+function addCategory({ name, icon = '🏷️', description = '' }) {
+  const stmt = db.prepare(`
+    INSERT INTO food_categories (name, icon, description)
+    VALUES (?, ?, ?)
+  `);
+  return stmt.run(name.trim(), (icon || '🏷️').trim(), (description || '').trim());
+}
+
+function updateCategory(id, { name, icon, description }) {
+  const oldCat = db.prepare('SELECT name FROM food_categories WHERE id = ?').get(Number(id));
+  const newName = name.trim();
+  const stmt = db.prepare(`
+    UPDATE food_categories
+    SET name = ?, icon = COALESCE(?, icon), description = COALESCE(?, description)
+    WHERE id = ?
+  `);
+  const res = stmt.run(newName, icon ? icon.trim() : null, description !== undefined ? description.trim() : null, Number(id));
+
+  // If category name changed, also update foods belonging to this category
+  if (oldCat && oldCat.name !== newName) {
+    db.prepare('UPDATE food_items SET category = ? WHERE LOWER(category) = LOWER(?)').run(newName, oldCat.name);
+  }
+  return res;
+}
+
+function deleteCategory(id) {
+  const cat = db.prepare('SELECT name FROM food_categories WHERE id = ?').get(Number(id));
+  if (cat) {
+    // Reassign foods in this category to 'Snack' so they aren't unassigned
+    db.prepare("UPDATE food_items SET category = 'Snack' WHERE LOWER(category) = LOWER(?)").run(cat.name);
+  }
+  return db.prepare('DELETE FROM food_categories WHERE id = ?').run(Number(id));
+}
+
+// -------------------------------------------------------------
 // Food Items & Consumption Log APIs
 // -------------------------------------------------------------
 
-function getFoods() {
-  return db.prepare(`
+function getFoods(filters = {}) {
+  let query = `
     SELECT f.*, COALESCE(SUM(l.quantity), 0) AS total_consumed
     FROM food_items f
     LEFT JOIN food_consumption_logs l ON f.id = l.food_id
-    GROUP BY f.id
-    ORDER BY total_consumed DESC, f.name ASC
-  `).all();
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (filters.category && filters.category !== 'all' && filters.category.trim()) {
+    query += ' AND LOWER(f.category) = LOWER(?)';
+    params.push(filters.category.trim());
+  }
+
+  if (filters.search && filters.search.trim()) {
+    query += ' AND (LOWER(f.name) LIKE ? OR LOWER(f.category) LIKE ?)';
+    const term = `%${filters.search.trim().toLowerCase()}%`;
+    params.push(term, term);
+  }
+
+  query += ' GROUP BY f.id';
+
+  if (filters.sortBy === 'name') {
+    query += ' ORDER BY f.name ASC';
+  } else if (filters.sortBy === 'newest') {
+    query += ' ORDER BY f.id DESC';
+  } else {
+    query += ' ORDER BY total_consumed DESC, f.name ASC';
+  }
+
+  return db.prepare(query).all(...params);
 }
 
 function addFood({ name, category = 'Snack', unit = 'pcs', icon = '🍪' }) {
@@ -284,16 +391,28 @@ function addFood({ name, category = 'Snack', unit = 'pcs', icon = '🍪' }) {
 }
 
 function deleteFood(id) {
-  return db.prepare('DELETE FROM food_items WHERE id = ?').run(Number(id));
+  const fid = Number(id);
+  // Also clean up any consumption logs for this food item
+  db.prepare('DELETE FROM food_consumption_logs WHERE food_id = ?').run(fid);
+  return db.prepare('DELETE FROM food_items WHERE id = ?').run(fid);
 }
 
 function updateFood(id, { name, category, unit, icon }) {
+  const fid = Number(id);
+  const oldFood = db.prepare('SELECT name FROM food_items WHERE id = ?').get(fid);
+  const newName = name.trim();
   const stmt = db.prepare(`
     UPDATE food_items
     SET name = ?, category = ?, unit = ?, icon = ?
     WHERE id = ?
   `);
-  return stmt.run(name.trim(), category.trim(), unit.trim(), icon.trim(), Number(id));
+  const res = stmt.run(newName, (category || 'Snack').trim(), (unit || 'pcs').trim(), (icon || '🍪').trim(), fid);
+
+  // If food name changed, sync in consumption logs
+  if (oldFood && oldFood.name !== newName) {
+    db.prepare('UPDATE food_consumption_logs SET food_name = ? WHERE food_id = ?').run(newName, fid);
+  }
+  return res;
 }
 
 function updateFoodConsumptionLog(id, { quantity, notes }) {
@@ -950,6 +1069,7 @@ function resetAndSeed() {
   db.exec(`
     DROP TABLE IF EXISTS food_consumption_logs;
     DROP TABLE IF EXISTS food_items;
+    DROP TABLE IF EXISTS food_categories;
     DROP TABLE IF EXISTS meal_logs;
     DROP TABLE IF EXISTS daily_menus;
     DROP TABLE IF EXISTS meal_sessions;
@@ -977,6 +1097,10 @@ module.exports = {
   toggleSessionActive,
   getLogs,
   getAnalyticsReport,
+  getCategories,
+  addCategory,
+  updateCategory,
+  deleteCategory,
   getFoods,
   addFood,
   updateFood,

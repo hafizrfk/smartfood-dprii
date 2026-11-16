@@ -41,12 +41,14 @@ function showToast(message, type = 'info') {
 window.showToast = showToast;
 
 function switchTab(tabId) {
+  const actualTabId = tabId === 'scanner' ? 'foods' : tabId;
+
   // Hide all sections
   const sections = document.querySelectorAll('.tab-content');
   sections.forEach(sec => sec.classList.add('hidden'));
 
   // Show target section
-  const target = document.getElementById(`tab-${tabId}`);
+  const target = document.getElementById(`tab-${actualTabId}`);
   if (target) {
     target.classList.remove('hidden');
   }
@@ -54,7 +56,7 @@ function switchTab(tabId) {
   // Update active nav button
   const navBtns = document.querySelectorAll('.nav-tab-btn');
   navBtns.forEach(btn => {
-    if (btn.dataset.tab === tabId) {
+    if (btn.dataset.tab === actualTabId || (tabId === 'scanner' && btn.dataset.tab === 'foods')) {
       btn.className = 'nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-lg shadow-blue-600/30 border border-blue-500/50 transition-all';
     } else {
       btn.className = 'nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all';
@@ -62,24 +64,27 @@ function switchTab(tabId) {
   });
 
   // Module triggers
-  if (tabId === 'dashboard') {
+  if (actualTabId === 'dashboard') {
     if (window.foodManagerModule) window.foodManagerModule.loadFoodData();
     if (window.dashboardModule) window.dashboardModule.loadDashboardData();
-  } else if (tabId === 'scanner') {
-    const input = document.getElementById('scan-input');
-    if (input) {
-      setTimeout(() => input.focus(), 100);
+  } else if (actualTabId === 'foods') {
+    if (window.foodsCatalogModule) window.foodsCatalogModule.loadCatalog();
+    if (tabId === 'scanner') {
+      const scannerSection = document.getElementById('collapsible-scanner-section');
+      if (scannerSection && scannerSection.classList.contains('hidden')) {
+        window.foodsCatalogModule.toggleScanner();
+      }
+      const input = document.getElementById('scan-input');
+      if (input) setTimeout(() => input.focus(), 100);
+      if (window.scannerModule) window.scannerModule.refreshRecentLogs();
     }
-    if (window.scannerModule) {
-      window.scannerModule.refreshRecentLogs();
-    }
-  } else if (tabId === 'participants' && window.participantsModule) {
+  } else if (actualTabId === 'participants' && window.participantsModule) {
     window.participantsModule.loadParticipants();
-  } else if (tabId === 'sessions' && window.sessionsModule) {
+  } else if (actualTabId === 'sessions' && window.sessionsModule) {
     window.sessionsModule.loadSessions();
-  } else if (tabId === 'logs' && window.logsModule) {
+  } else if (actualTabId === 'logs' && window.logsModule) {
     window.logsModule.loadLogs();
-  } else if (tabId === 'reports' && window.reportsModule) {
+  } else if (actualTabId === 'reports' && window.reportsModule) {
     window.reportsModule.loadReport();
   }
 }
@@ -117,16 +122,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 4. Keyboard Shortcuts: F2 to open Scanner immediately
+  // 4. Keyboard Shortcuts: F2 to open Foods Catalog immediately
   window.addEventListener('keydown', (e) => {
     if (e.key === 'F2') {
       e.preventDefault();
-      switchTab('scanner');
+      switchTab('foods');
     }
   });
 
   // 5. Initialize Modules
   if (window.foodManagerModule) window.foodManagerModule.init();
+  if (window.foodsCatalogModule) window.foodsCatalogModule.init();
   if (window.dashboardModule) window.dashboardModule.init();
   if (window.scannerModule) window.scannerModule.init();
   if (window.participantsModule) window.participantsModule.init();

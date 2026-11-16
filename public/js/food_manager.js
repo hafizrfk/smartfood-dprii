@@ -628,6 +628,10 @@ const foodManagerModule = {
   },
 
   openAddFoodModal() {
+    if (window.foodsCatalogModule) {
+      window.foodsCatalogModule.openAddFoodModal();
+      return;
+    }
     const modal = document.getElementById('add-food-modal');
     if (modal) modal.classList.remove('hidden');
   },
@@ -654,6 +658,7 @@ const foodManagerModule = {
         window.showToast(res.message || `Makanan '${name}' berhasil ditambahkan!`, 'success');
         this.closeAddFoodModal();
         this.loadFoodData();
+        if (window.foodsCatalogModule) window.foodsCatalogModule.loadCatalog();
       } else {
         window.showToast(res.error || 'Gagal menambahkan makanan', 'error');
       }

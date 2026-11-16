@@ -3,14 +3,78 @@
 const API_BASE = '/api';
 
 const api = {
-  // Foods & Snacks APIs
-  async getFoods() {
+  // Categories APIs
+  async getCategories() {
     try {
-      const res = await fetch(`${API_BASE}/foods`);
-      return await res.json();
+      const res = await fetch(`${API_BASE}/categories`);
+      const result = await res.json();
+      if (result.success && result.data) return result.data;
+      return window.localStore.getCategories();
+    } catch (e) {
+      console.warn('API getCategories fallback to localStore:', e);
+      return window.localStore.getCategories();
+    }
+  },
+
+  async addCategory(data) {
+    try {
+      const res = await fetch(`${API_BASE}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      window.localStore.addCategory(data);
+      return result;
+    } catch (e) {
+      console.warn('API addCategory fallback:', e);
+      return window.localStore.addCategory(data);
+    }
+  },
+
+  async updateCategory(id, data) {
+    try {
+      const res = await fetch(`${API_BASE}/categories/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      window.localStore.updateCategory(id, data);
+      return result;
+    } catch (e) {
+      console.warn('API updateCategory fallback:', e);
+      return window.localStore.updateCategory(id, data);
+    }
+  },
+
+  async deleteCategory(id) {
+    try {
+      const res = await fetch(`${API_BASE}/categories/${id}`, { method: 'DELETE' });
+      const result = await res.json();
+      window.localStore.deleteCategory(id);
+      return result;
+    } catch (e) {
+      console.warn('API deleteCategory fallback:', e);
+      return window.localStore.deleteCategory(id);
+    }
+  },
+
+  // Foods & Snacks APIs
+  async getFoods(filters = {}) {
+    try {
+      const params = new URLSearchParams();
+      if (filters.category) params.append('category', filters.category);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      const url = `${API_BASE}/foods${params.toString() ? '?' + params.toString() : ''}`;
+      const res = await fetch(url);
+      const result = await res.json();
+      if (result.success && result.data) return result.data;
+      return window.localStore.getFoods(filters);
     } catch (e) {
       console.warn('API getFoods fallback:', e);
-      return window.localStore.getFoods();
+      return window.localStore.getFoods(filters);
     }
   },
 
@@ -48,9 +112,11 @@ const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      return await res.json();
+      const result = await res.json();
+      window.localStore.updateFood(id, data);
+      return result;
     } catch (e) {
-      return { success: true, message: 'Updated locally' };
+      return window.localStore.updateFood(id, data);
     }
   },
 

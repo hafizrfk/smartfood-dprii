@@ -14,13 +14,78 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // -------------------------------------------------------------
+// Food Categories Endpoints
+// -------------------------------------------------------------
+
+// Get all food categories with count of items
+app.get('/api/categories', (req, res) => {
+  try {
+    const categories = db.getCategories();
+    res.json({ success: true, data: categories });
+  } catch (err) {
+    console.error('Error fetching categories:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Add new category
+app.post('/api/categories', (req, res) => {
+  try {
+    const { name, icon, description } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'Nama kategori wajib diisi.' });
+    }
+    const result = db.addCategory({ name, icon, description });
+    res.status(201).json({ success: true, id: result.lastInsertRowid, message: `Kategori '${name}' berhasil ditambahkan!` });
+  } catch (err) {
+    console.error('Error adding category:', err);
+    if (err.message && err.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ success: false, error: 'Kategori dengan nama ini sudah ada.' });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update category
+app.put('/api/categories/:id', (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { name, icon, description } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'Nama kategori wajib diisi.' });
+    }
+    db.updateCategory(id, { name, icon, description });
+    res.json({ success: true, message: `Kategori '${name}' berhasil diperbarui!` });
+  } catch (err) {
+    console.error('Error updating category:', err);
+    if (err.message && err.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ success: false, error: 'Kategori dengan nama ini sudah ada.' });
+    }
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete category
+app.delete('/api/categories/:id', (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    db.deleteCategory(id);
+    res.json({ success: true, message: 'Kategori berhasil dihapus.' });
+  } catch (err) {
+    console.error('Error deleting category:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
 // Food & Snack Monitoring Endpoints
 // -------------------------------------------------------------
 
-// Get list of foods with total eaten count
+// Get list of foods with total eaten count (supports ?category=...&search=...&sortBy=...)
 app.get('/api/foods', (req, res) => {
   try {
-    const foods = db.getFoods();
+    const { category, search, sortBy } = req.query;
+    const foods = db.getFoods({ category, search, sortBy });
     res.json({ success: true, data: foods });
   } catch (err) {
     console.error('Error fetching foods:', err);

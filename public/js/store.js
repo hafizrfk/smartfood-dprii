@@ -9,6 +9,17 @@ const INITIAL_PARTICIPANTS = [
   { id: 6, participant_code: 'dprii-006', name: 'Zahra', department: 'DPR II', category: 'Peserta', dietary_type: 'Reguler', allergies: 'Tidak ada', daily_quota: 5, status: 'active' }
 ];
 
+const INITIAL_CATEGORIES = [
+  { id: 1, name: 'Snack Biskuit', icon: '🍪', description: 'Biskuit manis dan cookies renyah' },
+  { id: 2, name: 'Snack Jagung', icon: '🌽', description: 'Snack ekstrudat rasa jagung bakar & keju' },
+  { id: 3, name: 'Snack Gurih', icon: '🍝', description: 'Makaroni pedas, keripik & camilan asin' },
+  { id: 4, name: 'Biskuit Manis', icon: '🍘', description: 'Malkist, crackers bertabur gula dan kelapa' },
+  { id: 5, name: 'Cokelat Wafer', icon: '🍫', description: 'Wafer berlapis cokelat tebal & karamel' },
+  { id: 6, name: 'Snack Keju', icon: '🧀', description: 'Snack bola keju & stick keju gurih' },
+  { id: 7, name: 'Makanan Berat', icon: '🍱', description: 'Nasi kotak, bento, dan hidangan utama' },
+  { id: 8, name: 'Minuman Segar', icon: '🧃', description: 'Kopi, teh kemasan, susu & air mineral' }
+];
+
 const INITIAL_FOODS = [
   { id: 1, name: 'Good Time', category: 'Snack Biskuit', unit: 'bungkus', icon: '🍪', total_consumed: 9 },
   { id: 2, name: 'Momogi', category: 'Snack Jagung', unit: 'pcs', icon: '🌽', total_consumed: 9 },
@@ -54,6 +65,9 @@ class LocalStore {
     }
     if (!localStorage.getItem('smartfood_foods')) {
       localStorage.setItem('smartfood_foods', JSON.stringify(INITIAL_FOODS));
+    }
+    if (!localStorage.getItem('smartfood_categories')) {
+      localStorage.setItem('smartfood_categories', JSON.stringify(INITIAL_CATEGORIES));
     }
     if (!localStorage.getItem('smartfood_food_logs')) {
       localStorage.setItem('smartfood_food_logs', JSON.stringify(INITIAL_LOGS));
@@ -103,13 +117,96 @@ class LocalStore {
     return { success: true, message: `Peserta '${data.name}' berhasil ditambahkan!`, id: newId };
   }
 
-  getFoods() {
+  // Category Methods
+  getCategories() {
+    const categories = JSON.parse(localStorage.getItem('smartfood_categories') || '[]');
     const foods = JSON.parse(localStorage.getItem('smartfood_foods') || '[]');
+    return categories.map(c => {
+      const count = foods.filter(f => (f.category || '').toLowerCase() === (c.name || '').toLowerCase()).length;
+      return { ...c, food_count: count };
+    });
+  }
+
+  addCategory(data) {
+    const categories = JSON.parse(localStorage.getItem('smartfood_categories') || '[]');
+    const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id || 0)) + 1 : 1;
+    const newCat = {
+      id: newId,
+      name: data.name.trim(),
+      icon: (data.icon || '🏷️').trim(),
+      description: (data.description || '').trim()
+    };
+    categories.push(newCat);
+    localStorage.setItem('smartfood_categories', JSON.stringify(categories));
+    return { success: true, message: `Kategori '${data.name}' berhasil ditambahkan!`, id: newId };
+  }
+
+  updateCategory(id, data) {
+    let categories = JSON.parse(localStorage.getItem('smartfood_categories') || '[]');
+    let foods = JSON.parse(localStorage.getItem('smartfood_foods') || '[]');
+    const idx = categories.findIndex(c => c.id === Number(id));
+    if (idx !== -1) {
+      const oldName = categories[idx].name;
+      const newName = (data.name || oldName).trim();
+      categories[idx] = {
+        ...categories[idx],
+        name: newName,
+        icon: data.icon ? data.icon.trim() : categories[idx].icon,
+        description: data.description !== undefined ? data.description.trim() : categories[idx].description
+      };
+      localStorage.setItem('smartfood_categories', JSON.stringify(categories));
+
+      // Reassign foods if category name changed
+      if (oldName !== newName) {
+        foods = foods.map(f => (f.category || '').toLowerCase() === oldName.toLowerCase() ? { ...f, category: newName } : f);
+        localStorage.setItem('smartfood_foods', JSON.stringify(foods));
+      }
+      return { success: true, message: `Kategori '${newName}' berhasil diperbarui!` };
+    }
+    return { success: false, message: 'Kategori tidak ditemukan' };
+  }
+
+  deleteCategory(id) {
+    let categories = JSON.parse(localStorage.getItem('smartfood_categories') || '[]');
+    const cat = categories.find(c => c.id === Number(id));
+    if (cat) {
+      categories = categories.filter(c => c.id !== Number(id));
+      localStorage.setItem('smartfood_categories', JSON.stringify(categories));
+      // Reassign foods to Snack
+      let foods = JSON.parse(localStorage.getItem('smartfood_foods') || '[]');
+      foods = foods.map(f => (f.category || '').toLowerCase() === cat.name.toLowerCase() ? { ...f, category: 'Snack' } : f);
+      localStorage.setItem('smartfood_foods', JSON.stringify(foods));
+      return { success: true, message: 'Kategori berhasil dihapus!' };
+    }
+    return { success: false, message: 'Kategori tidak ditemukan' };
+  }
+
+  getFoods(filters = {}) {
+    let foods = JSON.parse(localStorage.getItem('smartfood_foods') || '[]');
     const logs = JSON.parse(localStorage.getItem('smartfood_food_logs') || '[]');
-    return foods.map(f => {
-      const total = logs.filter(l => l.food_id === f.id).reduce((sum, l) => sum + (Number(l.quantity) || 1), 0);
+    let result = foods.map(f => {
+      const total = logs.filter(l => l.food_id === f.id || l.food_name === f.name).reduce((sum, l) => sum + (Number(l.quantity) || 1), 0);
       return { ...f, total_consumed: total };
     });
+
+    if (filters.category && filters.category !== 'all' && filters.category.trim()) {
+      result = result.filter(f => (f.category || '').toLowerCase() === filters.category.trim().toLowerCase());
+    }
+
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.trim().toLowerCase();
+      result = result.filter(f => (f.name || '').toLowerCase().includes(q) || (f.category || '').toLowerCase().includes(q));
+    }
+
+    if (filters.sortBy === 'name') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (filters.sortBy === 'newest') {
+      result.sort((a, b) => (b.id || 0) - (a.id || 0));
+    } else {
+      result.sort((a, b) => b.total_consumed - a.total_consumed);
+    }
+
+    return result;
   }
 
   addFood(data) {
@@ -117,15 +214,32 @@ class LocalStore {
     const newId = foods.length > 0 ? Math.max(...foods.map(f => f.id || 0)) + 1 : 1;
     const newF = {
       id: newId,
-      name: data.name,
-      category: data.category || 'Snack',
-      unit: data.unit || 'pcs',
-      icon: data.icon || '🍪',
+      name: data.name.trim(),
+      category: (data.category || 'Snack').trim(),
+      unit: (data.unit || 'pcs').trim(),
+      icon: (data.icon || '🍪').trim(),
       total_consumed: 0
     };
     foods.push(newF);
     localStorage.setItem('smartfood_foods', JSON.stringify(foods));
     return { success: true, message: `Makanan '${data.name}' berhasil ditambahkan!`, id: newId };
+  }
+
+  updateFood(id, data) {
+    let foods = JSON.parse(localStorage.getItem('smartfood_foods') || '[]');
+    const idx = foods.findIndex(f => f.id === Number(id));
+    if (idx !== -1) {
+      foods[idx] = {
+        ...foods[idx],
+        name: (data.name || foods[idx].name).trim(),
+        category: (data.category || foods[idx].category).trim(),
+        unit: (data.unit || foods[idx].unit).trim(),
+        icon: (data.icon || foods[idx].icon).trim()
+      };
+      localStorage.setItem('smartfood_foods', JSON.stringify(foods));
+      return { success: true, message: `Makanan '${foods[idx].name}' berhasil diperbarui!` };
+    }
+    return { success: false, message: 'Makanan tidak ditemukan' };
   }
 
   deleteFood(id) {
