@@ -250,6 +250,60 @@ class LocalStore {
     return { success: true, data: recap.participants_breakdown[code] };
   }
 
+  resetParticipant(code) {
+    let logs = JSON.parse(localStorage.getItem('smartfood_food_logs') || '[]');
+    logs = logs.filter(l => l.participant_code.toLowerCase() !== code.toLowerCase());
+    localStorage.setItem('smartfood_food_logs', JSON.stringify(logs));
+    return { success: true, message: `Konsumsi makanan untuk peserta '${code}' berhasil dikembalikan ke 0!` };
+  }
+
+  resetAllFoods() {
+    localStorage.setItem('smartfood_food_logs', JSON.stringify([]));
+    return { success: true, message: 'Seluruh konsumsi peserta berhasil dikembalikan ke 0!' };
+  }
+
+  setFoodQuantity(code, foodId, targetQuantity) {
+    const qty = Number(targetQuantity);
+    const fid = Number(foodId);
+    let logs = JSON.parse(localStorage.getItem('smartfood_food_logs') || '[]');
+    const foods = this.getFoods();
+    const f = foods.find(x => x.id === fid) || { name: 'Makanan', unit: 'pcs' };
+    const participants = this.getParticipants();
+    const p = participants.find(x => x.participant_code.toLowerCase() === code.toLowerCase()) || { name: code };
+
+    // Remove old logs for this participant and food
+    logs = logs.filter(l => !(l.participant_code.toLowerCase() === code.toLowerCase() && (l.food_id === fid || l.food_name === f.name)));
+
+    if (qty > 0) {
+      logs.unshift({
+        id: Date.now(),
+        participant_id: p.id,
+        participant_code: code,
+        participant_name: p.name,
+        food_id: fid,
+        food_name: f.name,
+        quantity: qty,
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        notes: `Koreksi: ${qty} ${f.unit || 'pcs'} ${f.name}`
+      });
+    }
+
+    localStorage.setItem('smartfood_food_logs', JSON.stringify(logs));
+    return {
+      success: true,
+      message: qty <= 0 
+        ? `Konsumsi ${f.name} untuk ${p.name} berhasil dikembalikan ke 0!` 
+        : `Konsumsi ${f.name} untuk ${p.name} berhasil diubah menjadi ${qty} ${f.unit || 'pcs'}!`
+    };
+  }
+
+  deleteFoodLog(id) {
+    let logs = JSON.parse(localStorage.getItem('smartfood_food_logs') || '[]');
+    logs = logs.filter(l => l.id !== Number(id));
+    localStorage.setItem('smartfood_food_logs', JSON.stringify(logs));
+    return { success: true };
+  }
+
   resetLocal() {
     localStorage.setItem('smartfood_participants', JSON.stringify(INITIAL_PARTICIPANTS));
     localStorage.setItem('smartfood_foods', JSON.stringify(INITIAL_FOODS));

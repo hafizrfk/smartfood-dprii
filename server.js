@@ -59,6 +59,19 @@ app.delete('/api/foods/:id', (req, res) => {
   }
 });
 
+// Update food item
+app.put('/api/foods/:id', (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { name, category, unit, icon } = req.body;
+    db.updateFood(id, { name, category, unit, icon });
+    res.json({ success: true, message: `Makanan '${name}' berhasil diperbarui!` });
+  } catch (err) {
+    console.error('Error updating food:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Record participant consuming food/snack
 app.post('/api/food-consumption', (req, res) => {
   try {
@@ -81,6 +94,71 @@ app.post('/api/food-consumption', (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     console.error('Error recording food consumption:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update or adjust specific food quantity for a participant (misal ubah jadi 0 atau nilai lain)
+app.put('/api/participants/:code/food-quantity', (req, res) => {
+  try {
+    const { code } = req.params;
+    const { foodId, quantity } = req.body;
+    if (!foodId) {
+      return res.status(400).json({ success: false, error: 'foodId wajib dikirim.' });
+    }
+
+    const result = db.setParticipantFoodQuantity(code, Number(foodId), Number(quantity));
+    res.json(result);
+  } catch (err) {
+    console.error('Error setting food quantity:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Reset food consumption for a specific participant (kembalikan ke 0)
+app.post('/api/participants/:code/reset-food', (req, res) => {
+  try {
+    const { code } = req.params;
+    const result = db.resetParticipantFood(code);
+    res.json(result);
+  } catch (err) {
+    console.error('Error resetting participant food:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Reset ALL participants' food consumption back to 0
+app.post('/api/food-consumption/reset-all', (req, res) => {
+  try {
+    const result = db.resetAllFoodConsumption();
+    res.json(result);
+  } catch (err) {
+    console.error('Error resetting all food consumption:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update a single consumption log entry
+app.put('/api/food-consumption/:id', (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { quantity, notes } = req.body;
+    db.updateFoodConsumptionLog(id, { quantity, notes });
+    res.json({ success: true, message: 'Log konsumsi berhasil diperbarui.' });
+  } catch (err) {
+    console.error('Error updating food consumption log:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete a single consumption log entry
+app.delete('/api/food-consumption/:id', (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    db.deleteFoodConsumptionLog(id);
+    res.json({ success: true, message: 'Log konsumsi berhasil dihapus.' });
+  } catch (err) {
+    console.error('Error deleting food consumption log:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

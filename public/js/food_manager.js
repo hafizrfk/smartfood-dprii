@@ -5,6 +5,7 @@ let foodDonutChart = null;
 const foodManagerModule = {
   currentRecap: null,
   foodsList: [],
+  activeEditCode: null,
 
   init() {
     this.bindEvents();
@@ -51,13 +52,12 @@ const foodManagerModule = {
         this.populateDropdowns(res.data.leaderboard, res.data.food_stats);
         this.renderChart(res.data.food_stats);
 
-        // Auto select first participant in dropdown (Juara 1: Hafiz)
+        // Auto select first participant in dropdown (Juara 1)
         if (res.data.leaderboard && res.data.leaderboard.length > 0) {
           const detailSelect = document.getElementById('select-participant-detail');
-          if (detailSelect && !detailSelect.value) {
-            detailSelect.value = res.data.leaderboard[0].participant_code;
-          }
-          this.renderParticipantDetail(detailSelect?.value || res.data.leaderboard[0].participant_code);
+          const selected = detailSelect?.value || res.data.leaderboard[0].participant_code;
+          if (detailSelect) detailSelect.value = selected;
+          this.renderParticipantDetail(selected);
         }
       }
     } catch (err) {
@@ -131,6 +131,9 @@ const foodManagerModule = {
           <div class="mt-3 px-3 py-1 bg-white rounded-xl border border-slate-200 shadow-xs text-xs font-black text-slate-700">
             Total: <span class="text-base text-blue-600">${rank2.total_items_eaten}</span> Makanan
           </div>
+          <button onclick="foodManagerModule.openEditParticipantModal('${rank2.participant_code}')" class="mt-2 text-[11px] font-bold text-amber-700 hover:underline">
+            <i class="fa-solid fa-pen-to-square"></i> Koreksi Makanan
+          </button>
         </div>
 
         <!-- Rank 1: Gold Champion -->
@@ -146,6 +149,9 @@ const foodManagerModule = {
           <div class="mt-3 px-4 py-1.5 bg-white rounded-xl border border-amber-300 shadow-xs text-xs font-black text-amber-900">
             Total: <span class="text-lg text-emerald-600 font-black">${rank1.total_items_eaten}</span> Makanan
           </div>
+          <button onclick="foodManagerModule.openEditParticipantModal('${rank1.participant_code}')" class="mt-2 text-[11px] font-bold text-amber-800 hover:underline">
+            <i class="fa-solid fa-pen-to-square"></i> Koreksi Makanan
+          </button>
         </div>
 
         <!-- Rank 3: Bronze -->
@@ -161,6 +167,9 @@ const foodManagerModule = {
           <div class="mt-3 px-3 py-1 bg-white rounded-xl border border-amber-200 shadow-xs text-xs font-black text-amber-900">
             Total: <span class="text-base text-blue-600">${rank3.total_items_eaten}</span> Makanan
           </div>
+          <button onclick="foodManagerModule.openEditParticipantModal('${rank3.participant_code}')" class="mt-2 text-[11px] font-bold text-amber-700 hover:underline">
+            <i class="fa-solid fa-pen-to-square"></i> Koreksi Makanan
+          </button>
         </div>
       `;
     }
@@ -186,7 +195,7 @@ const foodManagerModule = {
               <span>${p.name}</span>
             </td>
             <td class="py-3 px-4 text-center">
-              <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <span class="px-3 py-1 rounded-full text-xs font-black ${p.total_items_eaten > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-gray-100 text-gray-500'}">
                 ${p.total_items_eaten} Makanan
               </span>
             </td>
@@ -194,9 +203,17 @@ const foodManagerModule = {
               ${p.total_eating_events || 0} Kali
             </td>
             <td class="py-3 px-4 text-right">
-              <button onclick="foodManagerModule.viewParticipantDetail('${p.participant_code}')" class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-lg transition-all flex items-center gap-1 ml-auto">
-                <i class="fa-solid fa-eye"></i> Detail
-              </button>
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="foodManagerModule.viewParticipantDetail('${p.participant_code}')" title="Lihat Rincian" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-lg transition-all flex items-center gap-1">
+                  <i class="fa-solid fa-eye"></i> Detail
+                </button>
+                <button onclick="foodManagerModule.openEditParticipantModal('${p.participant_code}')" title="Edit / Koreksi Makanan" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-lg border border-amber-200 transition-all flex items-center gap-1">
+                  <i class="fa-solid fa-pen-to-square"></i> Koreksi
+                </button>
+                <button onclick="foodManagerModule.resetParticipantAllFoods('${p.participant_code}', '${p.name}')" title="Kembalikan ke 0" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg border border-rose-200 transition-all flex items-center gap-1">
+                  <i class="fa-solid fa-rotate-left"></i> Set 0
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -276,29 +293,62 @@ const foodManagerModule = {
             </div>
           </div>
 
-          <div class="bg-white px-5 py-3 rounded-2xl border border-blue-200 shadow-xs text-left sm:text-right">
-            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Makanan Dimakan</div>
-            <div class="text-3xl font-black text-emerald-600">${breakdown.total_eaten} <span class="text-sm font-bold text-gray-600">Porsi / Pcs</span></div>
+          <div class="flex items-center gap-3">
+            <div class="bg-white px-5 py-3 rounded-2xl border border-blue-200 shadow-xs text-left sm:text-right">
+              <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Makanan Dimakan</div>
+              <div class="text-3xl font-black text-emerald-600">${breakdown.total_eaten} <span class="text-sm font-bold text-gray-600">Porsi / Pcs</span></div>
+            </div>
+            
+            <button onclick="foodManagerModule.openEditParticipantModal('${p.participant_code}')" class="px-3.5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-2xl shadow transition-all flex flex-col items-center gap-1">
+              <i class="fa-solid fa-sliders text-base"></i>
+              <span>Koreksi</span>
+            </button>
           </div>
         </div>
 
-        <!-- Rincian Apa Saja yang Dimakan -->
+        <!-- Rincian Menu yang Dimakan dengan Kontrol Cepat -->
         <div>
-          <h4 class="text-xs font-black uppercase tracking-wider text-gray-700 mb-3 flex items-center gap-1.5">
-            <i class="fa-solid fa-cookie-bite text-amber-500"></i>
-            Rincian Menu Makanan yang Dimakan oleh ${p.name}:
-          </h4>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-cookie-bite text-amber-500"></i>
+              Rincian Makanan yang Dimakan oleh ${p.name}:
+            </h4>
+            <span class="text-[11px] text-gray-500">Gunakan tombol + / - / Set 0 untuk mengoreksi</span>
+          </div>
 
           ${items.length === 0 ? `
-            <div class="text-sm text-gray-400 py-4 text-center">Belum ada makanan yang dicatat untuk peserta ini.</div>
+            <div class="p-6 bg-white rounded-2xl border border-dashed border-gray-200 text-center text-sm text-gray-400">
+              <i class="fa-solid fa-bowl-rice text-2xl mb-1 block"></i>
+              Belum ada makanan yang dicatat untuk ${p.name}. (Total: 0)
+            </div>
           ` : `
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               ${items.map(item => `
-                <div class="p-3.5 bg-white rounded-xl border border-gray-200 shadow-xs flex items-center gap-3">
-                  <div class="text-2xl">${item.icon || '🍪'}</div>
-                  <div>
-                    <div class="font-black text-sm text-gray-900">${item.name}</div>
-                    <div class="text-xs font-bold text-emerald-600">${item.quantity} ${item.unit || 'pcs'}</div>
+                <div class="p-4 bg-white rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">${item.icon || '🍪'}</span>
+                      <div>
+                        <div class="font-black text-sm text-gray-900">${item.name}</div>
+                        <div class="text-xs font-bold text-emerald-600">${item.quantity} ${item.unit || 'pcs'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick Action Buttons: [-] [+] and [Set 0] -->
+                  <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-1 text-xs">
+                    <div class="flex items-center gap-1">
+                      <button onclick="foodManagerModule.adjustFoodQuantity('${p.participant_code}', ${item.id}, ${item.quantity - 1})" class="w-6 h-6 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-black flex items-center justify-center transition-all" title="Kurangi 1">
+                        -
+                      </button>
+                      <button onclick="foodManagerModule.adjustFoodQuantity('${p.participant_code}', ${item.id}, ${item.quantity + 1})" class="w-6 h-6 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-black flex items-center justify-center transition-all" title="Tambah 1">
+                        +
+                      </button>
+                    </div>
+
+                    <button onclick="foodManagerModule.adjustFoodQuantity('${p.participant_code}', ${item.id}, 0)" class="px-2 py-0.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition-all flex items-center gap-1" title="Kembalikan snack ini ke 0">
+                      <i class="fa-solid fa-rotate-left"></i> Set 0
+                    </button>
                   </div>
                 </div>
               `).join('')}
@@ -306,21 +356,38 @@ const foodManagerModule = {
           `}
         </div>
 
+        <!-- Tombol Aksi Bahaya: Reset Total Peserta Ini ke 0 -->
+        <div class="pt-4 border-t border-blue-100 flex flex-wrap items-center justify-between gap-3">
+          <div class="text-xs text-gray-500">
+            Ingin mengosongkan seluruh catatan konsumsi ${p.name}?
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="foodManagerModule.resetParticipantAllFoods('${p.participant_code}', '${p.name}')" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-trash-can"></i> Kembalikan Semua Makanan ${p.name} ke 0
+            </button>
+          </div>
+        </div>
+
         <!-- Riwayat Waktu Konsumsi -->
         ${history.length > 0 ? `
-          <div class="pt-4 border-t border-blue-100">
+          <div class="pt-2">
             <h4 class="text-xs font-black uppercase tracking-wider text-gray-700 mb-2.5">
-              <i class="fa-solid fa-clock-rotate-left text-blue-500 mr-1"></i> Riwayat Konsumsi Terakhir:
+              <i class="fa-solid fa-clock-rotate-left text-blue-500 mr-1"></i> Log Riwayat Pengambilan Makanan Terakhir:
             </h4>
-            <div class="space-y-1.5">
+            <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
               ${history.map(h => `
-                <div class="flex items-center justify-between px-3 py-2 bg-white/80 rounded-xl border border-gray-100 text-xs">
+                <div class="flex items-center justify-between px-3 py-2 bg-white/90 rounded-xl border border-gray-100 text-xs">
                   <div class="flex items-center gap-2">
                     <span>${h.icon || '🍪'}</span>
                     <span class="font-bold text-gray-900">${h.food_name} (${h.quantity} ${h.unit || 'pcs'})</span>
                     <span class="text-gray-400">• ${h.notes || '-'}</span>
                   </div>
-                  <span class="font-mono text-gray-500 font-bold">${h.timestamp.split(' ')[1] || h.timestamp}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-gray-500 font-bold">${h.timestamp.split(' ')[1] || h.timestamp}</span>
+                    <button onclick="foodManagerModule.deleteConsumptionLog(${h.id})" class="text-rose-500 hover:text-rose-700 p-1" title="Hapus catatan ini">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
                 </div>
               `).join('')}
             </div>
@@ -355,7 +422,7 @@ const foodManagerModule = {
         labels: labels,
         datasets: [{
           data: data,
-          backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#64748b'],
+          backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#64748b', '#14b8a6'],
           borderWidth: 2,
           borderColor: '#ffffff'
         }]
@@ -394,16 +461,13 @@ const foodManagerModule = {
         window.soundFx.playSuccess();
         window.showToast(res.message, 'success');
         
-        // Confetti!
         if (typeof confetti === 'function') {
           confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 } });
         }
 
-        // Reset qty & notes
         document.getElementById('quick-log-qty').value = '1';
         document.getElementById('quick-log-notes').value = '';
 
-        // Reload data
         this.loadFoodData();
       } else {
         window.showToast(res.message || 'Gagal mencatat makanan', 'error');
@@ -413,6 +477,156 @@ const foodManagerModule = {
     }
   },
 
+  // -------------------------------------------------------------
+  // CRUD & Reset Operations (Kembalikan ke 0 / Koreksi Makanan)
+  // -------------------------------------------------------------
+
+  async adjustFoodQuantity(participantCode, foodId, newQuantity) {
+    const qty = Math.max(0, Number(newQuantity));
+    try {
+      const res = await window.api.updateFoodQuantity(participantCode, foodId, qty);
+      if (res.success) {
+        window.showToast(res.message || 'Berhasil mengupdate jumlah makanan!', 'success');
+        this.loadFoodData();
+      } else {
+        window.showToast(res.message || 'Gagal mengubah jumlah', 'error');
+      }
+    } catch (e) {
+      window.showToast('Error: ' + e.message, 'error');
+    }
+  },
+
+  async resetParticipantAllFoods(participantCode, name) {
+    if (!confirm(`Apakah Anda yakin ingin MENGEMBALIKAN SEMUA MAKANAN ${name} (${participantCode}) KE 0? Seluruh riwayat makanan peserta ini akan dikosongkan.`)) {
+      return;
+    }
+
+    try {
+      const res = await window.api.resetParticipantFood(participantCode);
+      if (res.success) {
+        window.showToast(res.message, 'info');
+        this.loadFoodData();
+      } else {
+        window.showToast(res.message || 'Gagal me-reset makanan', 'error');
+      }
+    } catch (e) {
+      window.showToast('Error: ' + e.message, 'error');
+    }
+  },
+
+  async resetAllParticipantsLeaderboard() {
+    if (!confirm('PERINGATAN: Apakah Anda yakin ingin MENGEMBALIKAN KE 0 KONSUMSI SEMUA PESERTA? Klasemen akan dimulai dari awal (0).')) {
+      return;
+    }
+
+    try {
+      const res = await window.api.resetAllFoodConsumption();
+      if (res.success) {
+        window.showToast(res.message, 'success');
+        this.loadFoodData();
+      } else {
+        window.showToast('Gagal me-reset klasemen', 'error');
+      }
+    } catch (e) {
+      window.showToast('Error: ' + e.message, 'error');
+    }
+  },
+
+  async deleteConsumptionLog(id) {
+    if (!confirm('Hapus entri catatan makanan ini?')) return;
+    try {
+      const res = await window.api.deleteFoodLog(id);
+      if (res.success) {
+        window.showToast('Catatan berhasil dihapus!', 'info');
+        this.loadFoodData();
+      }
+    } catch (e) {
+      window.showToast('Gagal: ' + e.message, 'error');
+    }
+  },
+
+  // Modal Koreksi Lengkap per Peserta
+  openEditParticipantModal(participantCode) {
+    if (!this.currentRecap) return;
+    const breakdown = this.currentRecap.participants_breakdown[participantCode];
+    if (!breakdown) return;
+
+    this.activeEditCode = participantCode;
+    const modal = document.getElementById('edit-participant-food-modal');
+    const pName = document.getElementById('edit-modal-participant-name');
+    const pCode = document.getElementById('edit-modal-participant-code');
+    const container = document.getElementById('edit-modal-foods-list');
+
+    if (pName) pName.textContent = breakdown.participant.name;
+    if (pCode) pCode.textContent = breakdown.participant.participant_code;
+
+    // Render each food item with direct number input
+    if (container) {
+      const allFoods = this.foodsList;
+      const currentItemsMap = {};
+      (breakdown.items || []).forEach(it => { currentItemsMap[it.id] = it.quantity; });
+
+      container.innerHTML = allFoods.map(f => {
+        const currentQty = currentItemsMap[f.id] || 0;
+        return `
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-gray-200">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">${f.icon || '🍪'}</span>
+              <div>
+                <div class="font-black text-sm text-gray-900">${f.name}</div>
+                <div class="text-[11px] text-gray-500">${f.category || 'Snack'} (${f.unit || 'pcs'})</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="number" id="input-edit-food-${f.id}" value="${currentQty}" min="0" max="999" class="w-20 text-center font-black text-sm px-2 py-1.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              <button type="button" onclick="document.getElementById('input-edit-food-${f.id}').value = 0" class="px-2 py-1 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-xs rounded-lg transition-all" title="Ubah langsung ke 0">
+                Set 0
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (modal) modal.classList.remove('hidden');
+  },
+
+  closeEditParticipantModal() {
+    const modal = document.getElementById('edit-participant-food-modal');
+    if (modal) modal.classList.add('hidden');
+    this.activeEditCode = null;
+  },
+
+  setAllModalInputsToZero() {
+    this.foodsList.forEach(f => {
+      const input = document.getElementById(`input-edit-food-${f.id}`);
+      if (input) input.value = 0;
+    });
+  },
+
+  async saveParticipantFoodModalChanges() {
+    if (!this.activeEditCode) return;
+    const code = this.activeEditCode;
+
+    try {
+      for (const f of this.foodsList) {
+        const input = document.getElementById(`input-edit-food-${f.id}`);
+        if (input) {
+          const qty = Number(input.value) || 0;
+          await window.api.updateFoodQuantity(code, f.id, qty);
+        }
+      }
+
+      window.showToast(`Konsumsi makanan untuk peserta '${code}' berhasil diperbarui!`, 'success');
+      this.closeEditParticipantModal();
+      this.loadFoodData();
+    } catch (err) {
+      window.showToast('Gagal menyimpan koreksi: ' + err.message, 'error');
+    }
+  },
+
+  // Modal Tambah Makanan Baru
   openAddFoodModal() {
     const modal = document.getElementById('add-food-modal');
     if (modal) modal.classList.remove('hidden');

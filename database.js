@@ -287,6 +287,105 @@ function deleteFood(id) {
   return db.prepare('DELETE FROM food_items WHERE id = ?').run(Number(id));
 }
 
+function updateFood(id, { name, category, unit, icon }) {
+  const stmt = db.prepare(`
+    UPDATE food_items
+    SET name = ?, category = ?, unit = ?, icon = ?
+    WHERE id = ?
+  `);
+  return stmt.run(name.trim(), category.trim(), unit.trim(), icon.trim(), Number(id));
+}
+
+function updateFoodConsumptionLog(id, { quantity, notes }) {
+  const qty = Number(quantity);
+  if (qty <= 0) {
+    return db.prepare('DELETE FROM food_consumption_logs WHERE id = ?').run(Number(id));
+  }
+  const stmt = db.prepare(`
+    UPDATE food_consumption_logs
+    SET quantity = ?, notes = COALESCE(?, notes)
+    WHERE id = ?
+  `);
+  return stmt.run(qty, notes || null, Number(id));
+}
+
+function deleteFoodConsumptionLog(id) {
+  return db.prepare('DELETE FROM food_consumption_logs WHERE id = ?').run(Number(id));
+}
+
+// Reset food consumption for a specific participant (kembalikan ke 0)
+function resetParticipantFood(participantCode) {
+  const code = (participantCode || '').trim();
+  const participant = db.prepare('SELECT * FROM participants WHERE UPPER(participant_code) = UPPER(?)').get(code);
+  if (!participant) {
+    return { success: false, message: `Peserta '${code}' tidak ditemukan.` };
+  }
+  const stmt = db.prepare('DELETE FROM food_consumption_logs WHERE UPPER(participant_code) = UPPER(?)');
+  const result = stmt.run(code);
+  return {
+    success: true,
+    message: `Konsumsi makanan untuk ${participant.name} (${code}) berhasil dikembalikan ke 0!`,
+    deleted_rows: result.changes
+  };
+}
+
+// Reset ALL participants' food consumption back to 0 (Kembalikan ke 0 untuk semua peserta)
+function resetAllFoodConsumption() {
+  const result = db.prepare('DELETE FROM food_consumption_logs').run();
+  return {
+    success: true,
+    message: 'Seluruh data konsumsi makanan peserta berhasil dikembalikan ke 0! Klasemen dimulai dari awal.',
+    deleted_rows: result.changes
+  };
+}
+
+// Set or adjust a participant's specific food quantity (misal Good Time diubah ke 0 atau angka lain)
+function setParticipantFoodQuantity(participantCode, foodId, targetQuantity) {
+  const code = (participantCode || '').trim();
+  const qty = Number(targetQuantity);
+  const fid = Number(foodId);
+
+  const participant = db.prepare('SELECT * FROM participants WHERE UPPER(participant_code) = UPPER(?)').get(code);
+  if (!participant) {
+    return { success: false, message: `Peserta '${code}' tidak ditemukan.` };
+  }
+
+  const food = db.prepare('SELECT * FROM food_items WHERE id = ?').get(fid);
+  if (!food) {
+    return { success: false, message: 'Jenis makanan tidak ditemukan.' };
+  }
+
+  // Delete existing records for this participant and food
+  db.prepare('DELETE FROM food_consumption_logs WHERE UPPER(participant_code) = UPPER(?) AND food_id = ?').run(code, fid);
+
+  if (qty > 0) {
+    const today = getTodayStr();
+    db.prepare(`
+      INSERT INTO food_consumption_logs (participant_id, participant_code, participant_name, food_id, food_name, quantity, date, timestamp, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'), ?)
+    `).run(
+      participant.id,
+      participant.participant_code,
+      participant.name,
+      food.id,
+      food.name,
+      qty,
+      today,
+      `Koreksi manual: ${qty} ${food.unit || 'pcs'} ${food.name}`
+    );
+  }
+
+  return {
+    success: true,
+    message: qty <= 0 
+      ? `Konsumsi ${food.name} untuk ${participant.name} berhasil dikembalikan ke 0!`
+      : `Konsumsi ${food.name} untuk ${participant.name} berhasil diubah menjadi ${qty} ${food.unit || 'pcs'}!`,
+    participant,
+    food,
+    new_quantity: qty
+  };
+}
+
 function recordFoodConsumption({ participantCode, foodId, quantity = 1, notes = '' }) {
   const code = (participantCode || '').trim();
   const qty = Math.max(1, Number(quantity) || 1);
@@ -880,8 +979,14 @@ module.exports = {
   getAnalyticsReport,
   getFoods,
   addFood,
+  updateFood,
   deleteFood,
   recordFoodConsumption,
+  updateFoodConsumptionLog,
+  deleteFoodConsumptionLog,
+  resetParticipantFood,
+  resetAllFoodConsumption,
+  setParticipantFoodQuantity,
   getFoodRecap,
   resetAndSeed
 };

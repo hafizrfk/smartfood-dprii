@@ -41,6 +41,71 @@ const api = {
     }
   },
 
+  async updateFood(id, data) {
+    try {
+      const res = await fetch(`${API_BASE}/foods/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: true, message: 'Updated locally' };
+    }
+  },
+
+  async updateFoodQuantity(participantCode, foodId, quantity) {
+    try {
+      const res = await fetch(`${API_BASE}/participants/${encodeURIComponent(participantCode)}/food-quantity`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foodId, quantity })
+      });
+      const result = await res.json();
+      window.localStore.setFoodQuantity(participantCode, foodId, quantity);
+      return result;
+    } catch (e) {
+      return window.localStore.setFoodQuantity(participantCode, foodId, quantity);
+    }
+  },
+
+  async resetParticipantFood(participantCode) {
+    try {
+      const res = await fetch(`${API_BASE}/participants/${encodeURIComponent(participantCode)}/reset-food`, {
+        method: 'POST'
+      });
+      const result = await res.json();
+      window.localStore.resetParticipant(participantCode);
+      return result;
+    } catch (e) {
+      return window.localStore.resetParticipant(participantCode);
+    }
+  },
+
+  async resetAllFoodConsumption() {
+    try {
+      const res = await fetch(`${API_BASE}/food-consumption/reset-all`, {
+        method: 'POST'
+      });
+      const result = await res.json();
+      window.localStore.resetAllFoods();
+      return result;
+    } catch (e) {
+      return window.localStore.resetAllFoods();
+    }
+  },
+
+  async deleteFoodLog(id) {
+    try {
+      const res = await fetch(`${API_BASE}/food-consumption/${id}`, { method: 'DELETE' });
+      const result = await res.json();
+      window.localStore.deleteFoodLog(id);
+      return result;
+    } catch (e) {
+      return window.localStore.deleteFoodLog(id);
+    }
+  },
+
   async recordFoodConsumption(data) {
     try {
       const res = await fetch(`${API_BASE}/food-consumption`, {
