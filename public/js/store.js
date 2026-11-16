@@ -69,15 +69,59 @@ class LocalStore {
     if (!localStorage.getItem('smartfood_categories')) {
       localStorage.setItem('smartfood_categories', JSON.stringify(INITIAL_CATEGORIES));
     }
+    // ⚠️ PENTING: Jangan pre-load INITIAL_LOGS hardcoded ke localStorage!
+    // Data konsumsi makanan hanya boleh berasal dari server (SQLite).
+    // localStorage logs hanya dipakai saat server offline.
+    // Data akan di-sync dari server saat getFoodRecap() berhasil dipanggil.
     if (!localStorage.getItem('smartfood_food_logs')) {
-      localStorage.setItem('smartfood_food_logs', JSON.stringify(INITIAL_LOGS));
+      localStorage.setItem('smartfood_food_logs', JSON.stringify([]));
     }
   }
 
   syncFromServer(serverData) {
-    if (serverData && serverData.leaderboard) {
-      // Keep local in sync with server if online
-      localStorage.setItem('smartfood_server_synced', 'true');
+    if (!serverData) return;
+    // Server is the single source of truth — overwrite local cache with server data
+    localStorage.setItem('smartfood_server_synced', 'true');
+
+    // Sync leaderboard / consumption data FROM server into local cache
+    if (serverData.leaderboard) {
+      // Build food_logs cache from server breakdown so offline reads are consistent
+      const logsFromServer = [];
+      let logId = 1;
+      if (serverData.participants_breakdown) {
+        for (const code of Object.keys(serverData.participants_breakdown)) {
+          const bd = serverData.participants_breakdown[code];
+          if (bd && bd.history) {
+            for (const h of bd.history) {
+              logsFromServer.push({
+                id: h.id || logId++,
+                participant_code: code,
+                participant_name: bd.participant ? bd.participant.name : code,
+                food_id: h.food_id || null,
+                food_name: h.food_name,
+                quantity: h.quantity,
+                timestamp: h.timestamp,
+                notes: h.notes || ''
+              });
+            }
+          }
+        }
+      }
+      // Replace local logs with server-authoritative data
+      localStorage.setItem('smartfood_food_logs', JSON.stringify(logsFromServer));
+    }
+
+    if (serverData.food_stats) {
+      // Sync food list (without overriding user-added foods in edge cases)
+      const serverFoods = serverData.food_stats.map(f => ({
+        id: f.id,
+        name: f.name,
+        category: f.category,
+        unit: f.unit,
+        icon: f.icon,
+        total_consumed: f.total_eaten || 0
+      }));
+      localStorage.setItem('smartfood_foods', JSON.stringify(serverFoods));
     }
   }
 
@@ -419,9 +463,12 @@ class LocalStore {
   }
 
   resetLocal() {
+    // Reset hanya metadata lokal (participants, foods, categories) ke default awal.
+    // Data konsumsi (food_logs) dikosongkan — akan di-sync ulang dari server saat reload.
     localStorage.setItem('smartfood_participants', JSON.stringify(INITIAL_PARTICIPANTS));
     localStorage.setItem('smartfood_foods', JSON.stringify(INITIAL_FOODS));
-    localStorage.setItem('smartfood_food_logs', JSON.stringify(INITIAL_LOGS));
+    localStorage.setItem('smartfood_food_logs', JSON.stringify([]));
+    localStorage.removeItem('smartfood_server_synced');
   }
 }
 

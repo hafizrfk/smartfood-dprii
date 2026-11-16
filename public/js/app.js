@@ -87,6 +87,20 @@ function switchTab(tabId) {
 window.switchTab = switchTab;
 
 document.addEventListener('DOMContentLoaded', () => {
+  // 0. PENTING: Bersihkan cache localStorage lama yang berisi INITIAL_LOGS hardcoded.
+  //    Versi lama app me-seed data sample ke localStorage (ID 1-17 hardcoded).
+  //    Server (SQLite) adalah satu-satunya sumber kebenaran untuk data konsumsi.
+  //    Kita hapus local logs lama agar tidak conflict dengan data server.
+  const LOCALSTORAGE_CACHE_VERSION = '3'; // Naikkan versi ini jika perlu force-clear ulang
+  const storedVersion = localStorage.getItem('smartfood_cache_version');
+  if (storedVersion !== LOCALSTORAGE_CACHE_VERSION) {
+    // Clear logs lama (data hardcoded dari INITIAL_LOGS)
+    localStorage.removeItem('smartfood_food_logs');
+    localStorage.removeItem('smartfood_server_synced');
+    // Simpan versi baru agar clear hanya terjadi sekali
+    localStorage.setItem('smartfood_cache_version', LOCALSTORAGE_CACHE_VERSION);
+    console.info('[SmartFood] Cache localStorage direset ke versi', LOCALSTORAGE_CACHE_VERSION, '— data akan di-sync dari server.');
+  }
   // 1. Initialize Date Picker with today
   const datePicker = document.getElementById('global-date-picker');
   const todayStr = new Date().toISOString().split('T')[0];

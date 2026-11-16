@@ -24,7 +24,7 @@ const api = {
         body: JSON.stringify(data)
       });
       const result = await res.json();
-      window.localStore.addCategory(data);
+      // Only write to localStorage if server failed
       return result;
     } catch (e) {
       console.warn('API addCategory fallback:', e);
@@ -40,7 +40,7 @@ const api = {
         body: JSON.stringify(data)
       });
       const result = await res.json();
-      window.localStore.updateCategory(id, data);
+      // Only write to localStorage if server failed
       return result;
     } catch (e) {
       console.warn('API updateCategory fallback:', e);
@@ -52,7 +52,7 @@ const api = {
     try {
       const res = await fetch(`${API_BASE}/categories/${id}`, { method: 'DELETE' });
       const result = await res.json();
-      window.localStore.deleteCategory(id);
+      // Only write to localStorage if server failed
       return result;
     } catch (e) {
       console.warn('API deleteCategory fallback:', e);
@@ -154,6 +154,7 @@ const api = {
         method: 'POST'
       });
       const result = await res.json();
+      // Clear local cache too so they stay in sync
       window.localStore.resetAllFoods();
       return result;
     } catch (e) {
@@ -165,6 +166,7 @@ const api = {
     try {
       const res = await fetch(`${API_BASE}/food-consumption/${id}`, { method: 'DELETE' });
       const result = await res.json();
+      // Remove from local cache too
       window.localStore.deleteFoodLog(id);
       return result;
     } catch (e) {
@@ -180,7 +182,8 @@ const api = {
         body: JSON.stringify(data)
       });
       const result = await res.json();
-      window.localStore.recordConsumption(data);
+      // Do NOT write to localStorage — server is the source of truth.
+      // Data will be re-synced on next getFoodRecap() call.
       return result;
     } catch (e) {
       console.warn('API recordFoodConsumption fallback to local:', e);
@@ -193,6 +196,7 @@ const api = {
       const res = await fetch(`${API_BASE}/food-recap`);
       const result = await res.json();
       if (result.success && result.data) {
+        // Server responded — sync local cache FROM server so they stay consistent
         window.localStore.syncFromServer(result.data);
         return result;
       }
