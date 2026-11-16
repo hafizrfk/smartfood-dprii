@@ -1,14 +1,88 @@
-/* Custom Styling for SmartFood ERP */
+/* Futuristic Dark Mode & 3D Ambient Styling for SmartFood ERP */
 
+:root {
+  --bg-deep: #060913;
+  --bg-card: rgba(13, 19, 34, 0.72);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --accent-gold: #f59e0b;
+  --accent-emerald: #10b981;
+  --accent-blue: #38bdf8;
+}
+
+body {
+  background-color: #060913;
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
+
+/* 3D Background Canvas */
+#three-bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Futuristic Frosted Glassmorphism Dark Panel */
+.glass-panel {
+  background: rgba(13, 19, 34, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.5), 0 0 25px -5px rgba(56, 189, 248, 0.12);
+}
+
+/* Podium Glows */
+.podium-gold {
+  background: linear-gradient(180deg, rgba(35, 27, 8, 0.85) 0%, rgba(17, 24, 39, 0.85) 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.3), inset 0 0 20px rgba(245, 158, 11, 0.1);
+}
+
+.podium-silver {
+  background: linear-gradient(180deg, rgba(24, 31, 47, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1.5px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 0 25px -5px rgba(148, 163, 184, 0.2), inset 0 0 15px rgba(148, 163, 184, 0.08);
+}
+
+.podium-bronze {
+  background: linear-gradient(180deg, rgba(36, 21, 14, 0.85) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1.5px solid rgba(249, 115, 22, 0.4);
+  box-shadow: 0 0 25px -5px rgba(249, 115, 22, 0.25), inset 0 0 15px rgba(249, 115, 22, 0.08);
+}
+
+/* Neon Glow Accents */
+.glow-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+}
+
+/* Keyframe Animations */
 @keyframes pulseGlow {
   0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 15px rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
 }
 
@@ -26,26 +100,51 @@
   animation: shakeError 0.4s ease-in-out;
 }
 
-/* Glassmorphism subtle overlay */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-}
-
-/* Custom scrollbars */
+/* Dark Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #090d16;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #1e293b;
   border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #334155;
+}
+
+/* Form inputs in Dark Mode */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Table styles */
+table th {
+  background-color: rgba(15, 23, 42, 0.95);
+  color: #94a3b8;
+}
+
+table tr:hover {
+  background-color: rgba(30, 41, 59, 0.45);
 }
 
 /* Printable ID Badges Layout */
@@ -63,7 +162,8 @@
     width: 100%;
     margin: 0;
     padding: 10mm;
-    background: white;
+    background: white !important;
+    color: black !important;
   }
   .no-print {
     display: none !important;
@@ -71,28 +171,24 @@
   .id-card-badge {
     break-inside: avoid;
     page-break-inside: avoid;
+    background: white !important;
+    color: black !important;
   }
 }
 
 .id-card-badge {
   width: 85mm;
   height: 125mm;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #cbd5e1;
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   background: white;
+  color: #0f172a;
   position: relative;
   overflow: hidden;
-}
-
-.id-card-header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  color: white;
-  padding: 12px;
-  text-align: center;
 }
 
 .badge-hole {

@@ -55,9 +55,9 @@ function switchTab(tabId) {
   const navBtns = document.querySelectorAll('.nav-tab-btn');
   navBtns.forEach(btn => {
     if (btn.dataset.tab === tabId) {
-      btn.className = 'nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-sm transition-all';
+      btn.className = 'nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-lg shadow-blue-600/30 border border-blue-500/50 transition-all';
     } else {
-      btn.className = 'nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all';
+      btn.className = 'nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all';
     }
   });
 

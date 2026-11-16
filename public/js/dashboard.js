@@ -113,16 +113,19 @@ const dashboardModule = {
           labels: labels,
           datasets: [{
             data: values,
-            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'],
+            backgroundColor: ['#10b981', '#38bdf8', '#f59e0b', '#8b5cf6'],
             borderWidth: 2,
-            borderColor: '#ffffff'
+            borderColor: '#0d1322'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 12, font: { size: 11 }, color: '#94a3b8' }
+            }
           },
           cutout: '68%'
         }
@@ -149,7 +152,7 @@ const dashboardModule = {
             {
               label: 'Total Peserta',
               data: totalMembers,
-              backgroundColor: '#e2e8f0',
+              backgroundColor: '#334155',
               borderRadius: 6
             }
           ]
@@ -158,11 +161,21 @@ const dashboardModule = {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 12, font: { size: 11 }, color: '#94a3b8' }
+            }
           },
           scales: {
-            y: { beginAtZero: true, ticks: { precision: 0 } },
-            x: { ticks: { font: { size: 10 } } }
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0, color: '#94a3b8' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            x: {
+              ticks: { font: { size: 10 }, color: '#94a3b8' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            }
           }
         }
       });
@@ -174,7 +187,7 @@ const dashboardModule = {
     if (!container) return;
 
     if (!logs || logs.length === 0) {
-      container.innerHTML = '<div class="text-xs text-gray-400 py-6 text-center">Belum ada peserta yang check-in hari ini.</div>';
+      container.innerHTML = '<div class="text-xs text-slate-500 py-6 text-center">Belum ada peserta yang check-in hari ini.</div>';
       return;
     }
 
@@ -184,19 +197,19 @@ const dashboardModule = {
       const initials = log.participant_name.split(' ').map(n => n[0]).slice(0, 2).join('');
 
       return `
-        <div class="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-slate-50 transition-all">
+        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/70 hover:bg-slate-800/40 transition-all">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-full ${isSuccess ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'} flex items-center justify-center font-black text-xs">
+            <div class="w-9 h-9 rounded-full ${isSuccess ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'} flex items-center justify-center font-black text-xs">
               ${initials}
             </div>
             <div>
-              <div class="text-xs font-bold text-gray-900">${log.participant_name}</div>
-              <div class="text-[11px] text-gray-500">${log.department} • <span class="font-medium text-gray-700">${log.session_name}</span></div>
+              <div class="text-xs font-bold text-white">${log.participant_name}</div>
+              <div class="text-[11px] text-slate-400">${log.department} • <span class="font-medium text-slate-300">${log.session_name}</span></div>
             </div>
           </div>
           <div class="text-right">
-            <span class="text-[11px] font-mono font-bold text-gray-700 block">${time}</span>
-            <span class="text-[10px] font-semibold ${isSuccess ? 'text-emerald-700' : 'text-rose-600'}">
+            <span class="text-[11px] font-mono font-bold text-slate-400 block">${time}</span>
+            <span class="text-[10px] font-semibold ${isSuccess ? 'text-emerald-400' : 'text-rose-400'}">
               ${isSuccess ? '✔ Porsi Diambil' : '✖ Ditolak Dobel'}
             </span>
           </div>
