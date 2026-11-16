@@ -1,0 +1,3163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rabbit Runner - Mario-Style Canvas Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1a102f, #080711 80%);
+      color: #f1f5f9;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      padding: 12px;
+    }
+
+    /* Pixel font styling */
+    .font-pixel {
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    /* Top Nav Bar */
+    header {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    .brand-badge {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+      outline: none;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-erp {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+    }
+    .btn-erp:hover {
+      background: rgba(59, 130, 246, 0.28);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-sound {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #cbd5e1;
+      padding: 8px 12px;
+    }
+    .btn-sound:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+    }
+
+    /* Game Canvas Container */
+    .game-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    canvas#gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Bottom Control Bar & Instructions */
+    .bottom-info {
+      width: 100%;
+      max-width: 960px;
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .info-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(8px);
+    }
+
+    .info-card .icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+
+    .info-card h4 {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #f8fafc;
+      margin-bottom: 2px;
+    }
+
+    .info-card p {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      line-height: 1.3;
+    }
+
+    .kbd {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    /* Mobile Controls Touch Overlay */
+    .touch-controls {
+      display: none;
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      pointer-events: none;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .touch-btn-group {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .t-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      color: white;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .t-btn:active {
+      background: rgba(245, 158, 11, 0.7);
+      border-color: #fbbf24;
+      transform: scale(0.93);
+    }
+
+    @media (max-width: 768px) {
+      .touch-controls {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🐰</div>
+      <div>
+        <div style="display:flex; align-items:center;">
+          <span class="brand-title">Rabbit Runner</span>
+          <span class="brand-badge">ARCADE</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button id="soundBtn" class="btn btn-sound" title="Toggle Sound (M)">
+        <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+        <span id="soundText" style="display:none;">Sound</span>
+      </button>
+
+      <button id="fullscreenBtn" class="btn btn-sound" title="Full Screen">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+
+      <a href="index.html" class="btn btn-erp">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back to SmartFood ERP</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Game Screen -->
+  <div class="game-wrapper" id="gameWrapper">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+    <!-- Touch controls for mobile -->
+    <div class="touch-controls" id="touchControls">
+      <div class="touch-btn-group">
+        <button class="t-btn" id="tLeft" aria-label="Left"><i class="fa-solid fa-arrow-left"></i></button>
+        <button class="t-btn" id="tRight" aria-label="Right"><i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+      <div class="touch-btn-group">
+        <button class="t-btn" id="tDown" aria-label="Duck"><i class="fa-solid fa-arrow-down"></i></button>
+        <button class="t-btn" id="tJump" style="background: rgba(245, 158, 11, 0.4); border-color:#f59e0b;" aria-label="Jump"><i class="fa-solid fa-arrow-up"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instructions & Key legend -->
+  <div class="bottom-info">
+    <div class="info-card">
+      <div class="icon-box" style="color: #60a5fa;"><i class="fa-solid fa-gamepad"></i></div>
+      <div>
+        <h4>1 Player (WASD)</h4>
+        <p><span class="kbd">W</span> Jump/Double-Jump &bull; <span class="kbd">A</span> Left &bull; <span class="kbd">D</span> Right &bull; <span class="kbd">S</span> Duck</p>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="icon-box" style="color: #f87171;"><i class="fa-solid fa-users"></i></div>
+      <div>
+        <h4>2 Player Co-op Mode</h4>
+        <p>P1: <span class="kbd">WASD</span> &bull; P2: <span class="kbd">&uarr;</span> Jump, <span class="kbd">&larr;</span><span class="kbd">&rarr;</span> Move, <span class="kbd">&darr;</span> Duck</p>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="icon-box" style="color: #fbbf24;"><i class="fa-solid fa-bolt"></i></div>
+      <div>
+        <h4>Power-ups & Combat</h4>
+        <p>⚡ Lightning Speed &bull; 🍄 Stomp Giant &bull; ⭐ Star Invincibility &bull; Stomp on foxes!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME ENGINE JAVASCRIPT -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ==========================================
+    // 1. SOUND SYSTEM (WEB AUDIO API SYNTHESIS)
+    // ==========================================
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.bgmPlaying = false;
+        this.bgmOscs = [];
+        this.bgmTimer = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        if (this.muted) {
+          this.stopBGM();
+        }
+        return this.muted;
+      }
+
+      playJump() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(450, now + 0.15);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.16);
+      }
+
+      playDoubleJump() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(650, now + 0.18);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.19);
+      }
+
+      playCarrot(combo = 1) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        const baseFreq = 780 + Math.min(combo * 50, 600);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.setValueAtTime(baseFreq * 1.5, now + 0.05);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.005, now + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      }
+
+      playStomp() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 0.15);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.16);
+      }
+
+      playHurt() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(90, now + 0.25);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+
+      playPowerup() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [330, 440, 554, 659];
+        notes.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.06);
+
+          gain.gain.setValueAtTime(0.2, now + i * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.15);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.06);
+          osc.stop(now + i * 0.06 + 0.16);
+        });
+      }
+
+      playBlockHit() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.1);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.11);
+      }
+
+      playBossHit() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.32);
+      }
+
+      playStageClear() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const melody = [
+          { f: 392, d: 0.12 }, // G4
+          { f: 523, d: 0.12 }, // C5
+          { f: 659, d: 0.12 }, // E5
+          { f: 784, d: 0.25 }, // G5
+          { f: 659, d: 0.12 }, // E5
+          { f: 784, d: 0.4 }   // G5 long
+        ];
+        let t = now;
+        melody.forEach(n => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(n.f, t);
+
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + n.d);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + n.d + 0.02);
+          t += n.d;
+        });
+      }
+
+      playGameOver() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [440, 415, 392, 349];
+        notes.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, now + i * 0.18);
+
+          gain.gain.setValueAtTime(0.2, now + i * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.18 + 0.22);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.18);
+          osc.stop(now + i * 0.18 + 0.24);
+        });
+      }
+
+      stopBGM() {
+        if (this.bgmTimer) {
+          clearInterval(this.bgmTimer);
+          this.bgmTimer = null;
+        }
+        this.bgmPlaying = false;
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // ==========================================
+    // 2. CONSTANTS & ENUMS
+    // ==========================================
+    const CANVAS_WIDTH = 800;
+    const CANVAS_HEIGHT = 450;
+    const GROUND_Y = 380;
+    const GRAVITY = 0.52;
+    const MAX_FALL_SPEED = 12;
+
+    const GameState = {
+      MENU: 'MENU',
+      PLAYING: 'PLAYING',
+      PAUSED: 'PAUSED',
+      STAGE_CLEAR: 'STAGE_CLEAR',
+      GAME_OVER: 'GAME_OVER',
+      VICTORY: 'VICTORY'
+    };
+
+    const StageThemes = {
+      1: {
+        name: 'Stage 1: Emerald Meadows',
+        shortName: 'Meadows',
+        skyTop: '#38bdf8',
+        skyBottom: '#bae6fd',
+        sunColor: '#fef08a',
+        hill1: '#22c55e',
+        hill2: '#16a34a',
+        groundTop: '#4ade80',
+        groundDirt: '#78350f',
+        brickColor: '#b45309',
+        enemySpeedMul: 1.0,
+        bossHp: 4
+      },
+      2: {
+        name: 'Stage 2: Sunbaked Dunes',
+        shortName: 'Dunes',
+        skyTop: '#ea580c',
+        skyBottom: '#fdba74',
+        sunColor: '#fed7aa',
+        hill1: '#d97706',
+        hill2: '#b45309',
+        groundTop: '#fcd34d',
+        groundDirt: '#92400e',
+        brickColor: '#c2410c',
+        enemySpeedMul: 1.25,
+        bossHp: 6
+      },
+      3: {
+        name: 'Stage 3: Twilight Forest',
+        shortName: 'Twilight',
+        skyTop: '#0f172a',
+        skyBottom: '#312e81',
+        sunColor: '#e0e7ff',
+        hill1: '#4338ca',
+        hill2: '#3730a3',
+        groundTop: '#8b5cf6',
+        groundDirt: '#3b0764',
+        brickColor: '#6d28d9',
+        enemySpeedMul: 1.5,
+        bossHp: 8
+      }
+    };
+
+    // ==========================================
+    // 3. INPUT MANAGER
+    // ==========================================
+    class InputManager {
+      constructor() {
+        this.keys = {};
+        this.touch = {
+          left: false,
+          right: false,
+          up: false,
+          down: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+          this.keys[e.code] = true;
+          // Prevent scrolling for game controls
+          if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+            e.preventDefault();
+          }
+        });
+
+        window.addEventListener('keyup', (e) => {
+          this.keys[e.code] = false;
+        });
+
+        this.setupTouchControls();
+      }
+
+      setupTouchControls() {
+        const bindTouch = (id, key) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const setVal = (v) => { this.touch[key] = v; };
+          el.addEventListener('touchstart', (e) => { e.preventDefault(); setVal(true); });
+          el.addEventListener('touchend', (e) => { e.preventDefault(); setVal(false); });
+          el.addEventListener('mousedown', (e) => { e.preventDefault(); setVal(true); });
+          el.addEventListener('mouseup', (e) => { e.preventDefault(); setVal(false); });
+          el.addEventListener('mouseleave', () => { setVal(false); });
+        };
+
+        bindTouch('tLeft', 'left');
+        bindTouch('tRight', 'right');
+        bindTouch('tJump', 'up');
+        bindTouch('tDown', 'down');
+      }
+
+      isP1Left() { return !!(this.keys['KeyA'] || this.touch.left); }
+      isP1Right() { return !!(this.keys['KeyD'] || this.touch.right); }
+      isP1Up() { return !!(this.keys['KeyW'] || this.touch.up); }
+      isP1Down() { return !!(this.keys['KeyS'] || this.touch.down); }
+
+      isP2Left() { return !!this.keys['ArrowLeft']; }
+      isP2Right() { return !!this.keys['ArrowRight']; }
+      isP2Up() { return !!this.keys['ArrowUp']; }
+      isP2Down() { return !!this.keys['ArrowDown']; }
+    }
+
+    const input = new InputManager();
+
+    // ==========================================
+    // 4. PARTICLE SYSTEM & FLOATING TEXTS
+    // ==========================================
+    class Particle {
+      constructor(x, y, vx, vy, color, size, life, type = 'dot') {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.size = size;
+        this.maxLife = life;
+        this.life = life;
+        this.type = type;
+        this.alpha = 1;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.15; // gentle gravity
+        this.life--;
+        this.alpha = Math.max(0, this.life / this.maxLife);
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        if (this.type === 'star') {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (this.type === 'smoke') {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * (1 + (1 - this.alpha)), 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+        }
+        ctx.restore();
+      }
+    }
+
+    class FloatingText {
+      constructor(x, y, text, color = '#fbbf24', size = 12) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.size = size;
+        this.life = 45;
+        this.maxLife = 45;
+      }
+
+      update() {
+        this.y -= 1.2;
+        this.life--;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+        ctx.font = `bold ${this.size}px "Outfit", sans-serif`;
+        ctx.fillStyle = this.color;
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(this.text, this.x, this.y);
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 5. PLAYER CLASS (RABBIT HERO)
+    // ==========================================
+    class Player {
+      constructor(id, x, y, colorScheme) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.startX = x;
+        this.startY = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.width = 32;
+        this.height = 42;
+        this.baseHeight = 42;
+        this.duckHeight = 24;
+        this.isGrounded = false;
+        this.isDucking = false;
+        this.facing = 1; // 1 = right, -1 = left
+
+        this.colorScheme = colorScheme; // { body, belly, earInner, scarf, eye }
+        this.jumpPressed = false;
+        this.canDoubleJump = false;
+        this.runCycle = 0;
+
+        // Stats
+        this.lives = 3;
+        this.score = 0;
+        this.carrotsCollected = 0;
+        this.isAlive = true;
+
+        // Power-ups
+        this.lightningTimer = 0; // Speed
+        this.mushroomTimer = 0;  // Size & Stomp power
+        this.starTimer = 0;      // Invincible
+        this.hurtCooldown = 0;   // Post-damage immunity
+        this.scale = 1.0;
+      }
+
+      reset(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.isGrounded = false;
+        this.isDucking = false;
+        this.lightningTimer = 0;
+        this.mushroomTimer = 0;
+        this.starTimer = 0;
+        this.hurtCooldown = 0;
+        this.scale = 1.0;
+        this.isAlive = true;
+      }
+
+      takeDamage(game) {
+        if (this.starTimer > 0 || this.hurtCooldown > 0 || !this.isAlive) return;
+
+        // If mushroom active, shrink instead of losing a life
+        if (this.mushroomTimer > 0) {
+          this.mushroomTimer = 0;
+          this.hurtCooldown = 90;
+          sound.playHurt();
+          game.screenShake = 12;
+          game.addFloatingText(this.x + this.width / 2, this.y, "SHRUNK!", "#f87171", 14);
+          return;
+        }
+
+        this.lives--;
+        this.hurtCooldown = 120; // 2 seconds flash
+        sound.playHurt();
+        game.screenShake = 18;
+        game.addFloatingText(this.x + this.width / 2, this.y, "-1 LIFE!", "#ef4444", 16);
+
+        // Emit red hurt particles
+        for (let i = 0; i < 15; i++) {
+          game.particles.push(new Particle(
+            this.x + this.width / 2,
+            this.y + this.height / 2,
+            (Math.random() - 0.5) * 6,
+            (Math.random() - 0.5) * 6,
+            '#ef4444',
+            4,
+            25
+          ));
+        }
+
+        if (this.lives <= 0) {
+          this.lives = 0;
+          this.isAlive = false;
+        }
+      }
+
+      update(inputLeft, inputRight, inputUp, inputDown, game) {
+        if (!this.isAlive) return;
+
+        // Power-up timers
+        if (this.lightningTimer > 0) this.lightningTimer--;
+        if (this.mushroomTimer > 0) this.mushroomTimer--;
+        if (this.starTimer > 0) this.starTimer--;
+        if (this.hurtCooldown > 0) this.hurtCooldown--;
+
+        // Determine Scale & Speed multipliers
+        const speedBoost = this.lightningTimer > 0 ? 1.55 : 1.0;
+        const maxSpeed = 4.2 * speedBoost;
+        const accel = 0.5 * speedBoost;
+        const friction = 0.82;
+
+        this.scale = this.mushroomTimer > 0 ? 1.4 : 1.0;
+        this.width = 32 * this.scale;
+
+        // Ducking
+        if (inputDown && this.isGrounded) {
+          this.isDucking = true;
+          this.height = this.duckHeight * this.scale;
+        } else {
+          this.isDucking = false;
+          this.height = this.baseHeight * this.scale;
+        }
+
+        // Horizontal movement
+        if (!this.isDucking) {
+          if (inputLeft) {
+            this.vx -= accel;
+            this.facing = -1;
+          } else if (inputRight) {
+            this.vx += accel;
+            this.facing = 1;
+          } else {
+            this.vx *= friction;
+          }
+        } else {
+          this.vx *= 0.6; // Heavy friction while crouching
+        }
+
+        // Clamp speed
+        this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
+        if (Math.abs(this.vx) < 0.05) this.vx = 0;
+
+        // Jump physics
+        const jumpPower = this.lightningTimer > 0 ? -12.5 : -11.5;
+
+        if (inputUp) {
+          if (!this.jumpPressed) {
+            this.jumpPressed = true;
+            if (this.isGrounded) {
+              this.vy = jumpPower;
+              this.isGrounded = false;
+              this.canDoubleJump = true;
+              sound.playJump();
+
+              // Jump dust
+              for (let i = 0; i < 5; i++) {
+                game.particles.push(new Particle(
+                  this.x + this.width / 2 + (Math.random() - 0.5) * 16,
+                  this.y + this.height,
+                  (Math.random() - 0.5) * 2,
+                  -Math.random() * 1.5,
+                  'rgba(255,255,255,0.6)',
+                  4,
+                  18,
+                  'smoke'
+                ));
+              }
+            } else if (this.canDoubleJump) {
+              this.vy = jumpPower * 0.92;
+              this.canDoubleJump = false;
+              sound.playDoubleJump();
+
+              // Double jump puff
+              for (let i = 0; i < 8; i++) {
+                game.particles.push(new Particle(
+                  this.x + this.width / 2 + (Math.random() - 0.5) * 12,
+                  this.y + this.height,
+                  (Math.random() - 0.5) * 4,
+                  Math.random() * 2,
+                  '#38bdf8',
+                  5,
+                  22,
+                  'smoke'
+                ));
+              }
+            }
+          }
+        } else {
+          this.jumpPressed = false;
+          // Variable jump cut when releasing jump button
+          if (this.vy < -3) {
+            this.vy *= 0.5;
+          }
+        }
+
+        // Apply Gravity
+        this.vy += GRAVITY;
+        if (this.vy > MAX_FALL_SPEED) this.vy = MAX_FALL_SPEED;
+
+        // Apply velocities
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Running animation
+        if (this.isGrounded && Math.abs(this.vx) > 0.3) {
+          this.runCycle += 0.25 * speedBoost;
+          if (Math.random() < 0.25) {
+            game.particles.push(new Particle(
+              this.x + this.width / 2 - this.facing * 8,
+              this.y + this.height - 2,
+              -this.facing * (Math.random() * 1.5),
+              -Math.random() * 1.2,
+              'rgba(240,240,240,0.5)',
+              3,
+              15,
+              'smoke'
+            ));
+          }
+        } else {
+          this.runCycle = 0;
+        }
+
+        // Star power rainbow sparks
+        if (this.starTimer > 0 && Math.random() < 0.6) {
+          const rainbowColors = ['#f43f5e', '#fbbf24', '#34d399', '#38bdf8', '#a855f7'];
+          const c = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+          game.particles.push(new Particle(
+            this.x + Math.random() * this.width,
+            this.y + Math.random() * this.height,
+            (Math.random() - 0.5) * 2,
+            (Math.random() - 0.5) * 2,
+            c,
+            5,
+            20,
+            'star'
+          ));
+        }
+
+        // Lightning power electric sparks
+        if (this.lightningTimer > 0 && Math.random() < 0.4) {
+          game.particles.push(new Particle(
+            this.x + Math.random() * this.width,
+            this.y + Math.random() * this.height,
+            (Math.random() - 0.5) * 3,
+            (Math.random() - 0.5) * 3,
+            '#fde047',
+            3,
+            14
+          ));
+        }
+      }
+
+      draw(ctx) {
+        if (!this.isAlive) return;
+
+        // Damage flashing
+        if (this.hurtCooldown > 0 && Math.floor(this.hurtCooldown / 4) % 2 === 0) {
+          return;
+        }
+
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height);
+        ctx.scale(this.facing, 1);
+
+        const w = this.width;
+        const h = this.height;
+        const bodyColor = this.starTimer > 0
+          ? `hsl(${(Date.now() / 4) % 360}, 90%, 65%)`
+          : this.colorScheme.body;
+
+        // Aura glow for Star or Lightning
+        if (this.starTimer > 0) {
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 16;
+        } else if (this.lightningTimer > 0) {
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 12;
+        } else if (this.mushroomTimer > 0) {
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 10;
+        }
+
+        // Tail
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-w * 0.45, -h * 0.35, 5 * this.scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs animation
+        const legOffset = Math.sin(this.runCycle) * 6 * this.scale;
+        ctx.fillStyle = this.colorScheme.earInner;
+
+        // Back leg
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.25 - legOffset, -6 * this.scale, 8 * this.scale, 7 * this.scale, 3);
+        ctx.fill();
+
+        // Front leg
+        ctx.beginPath();
+        ctx.roundRect(w * 0.05 + legOffset, -6 * this.scale, 8 * this.scale, 7 * this.scale, 3);
+        ctx.fill();
+
+        // Main Body (Rounded Rect)
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.4, -h * 0.8, w * 0.8, h * 0.75, 8 * this.scale);
+        ctx.fill();
+
+        // Belly Patch
+        ctx.fillStyle = this.colorScheme.belly;
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.1, -h * 0.65, w * 0.45, h * 0.55, 6 * this.scale);
+        ctx.fill();
+
+        // Scarf
+        ctx.fillStyle = this.colorScheme.scarf;
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.35, -h * 0.72, w * 0.7, 7 * this.scale, 3);
+        ctx.fill();
+
+        // Scarf tails (fluttering with runCycle or wind)
+        const scarfWave = Math.sin(Date.now() / 120) * 3;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.35, -h * 0.7);
+        ctx.lineTo(-w * 0.75, -h * 0.7 + scarfWave);
+        ctx.lineTo(-w * 0.7, -h * 0.6 + scarfWave);
+        ctx.lineTo(-w * 0.35, -h * 0.65);
+        ctx.fill();
+
+        // Ears
+        const earBob = this.isDucking ? 6 : Math.sin(this.runCycle * 1.5) * 3;
+        // Back ear
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.22, -h * 1.25 + earBob, 7 * this.scale, 20 * this.scale, 4);
+        ctx.fill();
+        ctx.fillStyle = this.colorScheme.earInner;
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.2, -h * 1.2 + earBob, 4 * this.scale, 14 * this.scale, 2);
+        ctx.fill();
+
+        // Front ear
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.02, -h * 1.3 + earBob, 8 * this.scale, 22 * this.scale, 4);
+        ctx.fill();
+        ctx.fillStyle = this.colorScheme.earInner;
+        ctx.beginPath();
+        ctx.roundRect(0, -h * 1.25 + earBob, 5 * this.scale, 16 * this.scale, 2);
+        ctx.fill();
+
+        // Eye (Big anime/pixel dot with shine)
+        ctx.fillStyle = this.colorScheme.eye || '#1e293b';
+        ctx.beginPath();
+        ctx.arc(w * 0.18, -h * 0.6, 3.5 * this.scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye shine
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(w * 0.22, -h * 0.63, 1.2 * this.scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pink nose & whiskers
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(w * 0.35, -h * 0.52, 2 * this.scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Whiskers
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.25, -h * 0.52);
+        ctx.lineTo(w * 0.45, -h * 0.55);
+        ctx.moveTo(w * 0.25, -h * 0.49);
+        ctx.lineTo(w * 0.45, -h * 0.46);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 6. COLLECTIBLE CARROT & POWER-UPS
+    // ==========================================
+    class Carrot {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.width = 20;
+        this.height = 24;
+        this.collected = false;
+        this.bobAngle = Math.random() * Math.PI * 2;
+      }
+
+      update() {
+        this.bobAngle += 0.08;
+        this.y = this.baseY + Math.sin(this.bobAngle) * 4;
+      }
+
+      draw(ctx) {
+        if (this.collected) return;
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+
+        // Carrot body (Orange cone)
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(-6, -4);
+        ctx.lineTo(6, -4);
+        ctx.lineTo(0, 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Carrot ridges
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-4, -1); ctx.lineTo(3, -1);
+        ctx.moveTo(-3, 3); ctx.lineTo(2, 3);
+        ctx.stroke();
+
+        // Green leaves
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.moveTo(0, -4);
+        ctx.lineTo(-5, -11);
+        ctx.lineTo(-1, -6);
+        ctx.lineTo(0, -12);
+        ctx.lineTo(2, -6);
+        ctx.lineTo(6, -10);
+        ctx.lineTo(0, -4);
+        ctx.fill();
+
+        // Sparkle glint
+        if (Math.sin(this.bobAngle * 2) > 0.7) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-2, -2, 2, 2);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    class PowerUpItem {
+      constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.type = type; // 'lightning', 'mushroom', 'star'
+        this.width = 24;
+        this.height = 24;
+        this.collected = false;
+        this.rot = 0;
+        this.bob = Math.random() * Math.PI * 2;
+      }
+
+      update() {
+        this.bob += 0.08;
+        this.y = this.baseY + Math.sin(this.bob) * 5;
+        this.rot += 0.04;
+      }
+
+      draw(ctx) {
+        if (this.collected) return;
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+
+        if (this.type === 'lightning') {
+          // Yellow Lightning Bolt
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = '#eab308';
+          ctx.beginPath();
+          ctx.moveTo(3, -11);
+          ctx.lineTo(-6, 0);
+          ctx.lineTo(-1, 0);
+          ctx.lineTo(-3, 11);
+          ctx.lineTo(6, -2);
+          ctx.lineTo(1, -2);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.moveTo(2, -9);
+          ctx.lineTo(-4, 0);
+          ctx.lineTo(0, 0);
+          ctx.lineTo(-1, 8);
+          ctx.lineTo(4, -1);
+          ctx.closePath();
+          ctx.fill();
+
+        } else if (this.type === 'mushroom') {
+          // Red Super Mushroom
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 10;
+          // Stem
+          ctx.fillStyle = '#fef3c7';
+          ctx.beginPath();
+          ctx.roundRect(-5, 0, 10, 8, 2);
+          ctx.fill();
+
+          // Cap
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, Math.PI, 0);
+          ctx.fill();
+
+          // White spots
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, -4, 3, 0, Math.PI * 2);
+          ctx.arc(-6, -1, 2, 0, Math.PI * 2);
+          ctx.arc(6, -1, 2, 0, Math.PI * 2);
+          ctx.fill();
+
+        } else if (this.type === 'star') {
+          // Spinning Golden Star
+          ctx.rotate(this.rot);
+          ctx.shadowColor = '#fbbf24';
+          ctx.shadowBlur = 14;
+          ctx.fillStyle = '#facc15';
+
+          ctx.beginPath();
+          const spikes = 5;
+          const outerR = 10;
+          const innerR = 4.5;
+          let rot = Math.PI / 2 * 3;
+          let step = Math.PI / spikes;
+
+          ctx.moveTo(0, -outerR);
+          for (let i = 0; i < spikes; i++) {
+            let cx = Math.cos(rot) * outerR;
+            let cy = Math.sin(rot) * outerR;
+            ctx.lineTo(cx, cy);
+            rot += step;
+
+            cx = Math.cos(rot) * innerR;
+            cy = Math.sin(rot) * innerR;
+            ctx.lineTo(cx, cy);
+            rot += step;
+          }
+          ctx.lineTo(0, -outerR);
+          ctx.closePath();
+          ctx.fill();
+
+          // Star eyes
+          ctx.fillStyle = '#1e1b4b';
+          ctx.fillRect(-2, -3, 1.5, 3);
+          ctx.fillRect(1, -3, 1.5, 3);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 7. PLATFORMS & BLOCKS
+    // ==========================================
+    class Block {
+      constructor(x, y, width = 36, height = 36, type = 'brick', content = null) {
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.width = width;
+        this.height = height;
+        this.type = type; // 'brick', 'question', 'empty'
+        this.content = content; // 'carrot', 'lightning', 'mushroom', 'star'
+        this.bumpTimer = 0;
+      }
+
+      bump(game, player) {
+        if (this.type === 'question') {
+          this.bumpTimer = 10;
+          this.type = 'empty';
+          sound.playBlockHit();
+
+          if (this.content === 'carrot') {
+            sound.playCarrot(1);
+            player.carrotsCollected++;
+            player.score += 50;
+            game.addFloatingText(this.x + this.width / 2, this.y - 12, "+50 Carrot!", "#fbbf24", 13);
+          } else if (this.content) {
+            game.powerUps.push(new PowerUpItem(this.x + 6, this.y - 32, this.content));
+            game.addFloatingText(this.x + this.width / 2, this.y - 12, this.content.toUpperCase() + "!", "#38bdf8", 13);
+          }
+        } else if (this.type === 'brick') {
+          this.bumpTimer = 8;
+          sound.playBlockHit();
+          // Break brick if player has mushroom
+          if (player.mushroomTimer > 0) {
+            this.broken = true;
+            for (let i = 0; i < 8; i++) {
+              game.particles.push(new Particle(
+                this.x + this.width / 2,
+                this.y + this.height / 2,
+                (Math.random() - 0.5) * 6,
+                (Math.random() - 0.5) * 6,
+                '#b45309',
+                5,
+                25
+              ));
+            }
+          }
+        }
+      }
+
+      update() {
+        if (this.bumpTimer > 0) {
+          this.bumpTimer--;
+          this.y = this.baseY - Math.sin((10 - this.bumpTimer) / 10 * Math.PI) * 6;
+        } else {
+          this.y = this.baseY;
+        }
+      }
+
+      draw(ctx, theme) {
+        if (this.broken) return;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        if (this.type === 'brick') {
+          // Brick Block
+          ctx.fillStyle = theme.brickColor;
+          ctx.fillRect(0, 0, this.width, this.height);
+
+          ctx.fillStyle = 'rgba(0,0,0,0.2)';
+          ctx.fillRect(0, this.height / 2 - 1, this.width, 2);
+          ctx.fillRect(this.width / 2 - 1, 0, 2, this.height / 2);
+          ctx.fillRect(this.width / 4 - 1, this.height / 2, 2, this.height / 2);
+          ctx.fillRect(this.width * 0.75 - 1, this.height / 2, 2, this.height / 2);
+
+          // Highlights
+          ctx.fillStyle = 'rgba(255,255,255,0.2)';
+          ctx.fillRect(0, 0, this.width, 2);
+          ctx.fillRect(0, 0, 2, this.height);
+
+        } else if (this.type === 'question') {
+          // Question Mark Block
+          const pulse = Math.sin(Date.now() / 150) * 0.15;
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(0, 0, this.width, this.height);
+
+          // Dark border
+          ctx.strokeStyle = '#b45309';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(1.5, 1.5, this.width - 3, this.height - 3);
+
+          // Question mark
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 20px "Press Start 2P", monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('?', this.width / 2, this.height / 2 + 2);
+
+          // Corners bolts
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(4, 4, 3, 3);
+          ctx.fillRect(this.width - 7, 4, 3, 3);
+          ctx.fillRect(4, this.height - 7, 3, 3);
+          ctx.fillRect(this.width - 7, this.height - 7, 3, 3);
+
+        } else if (this.type === 'empty') {
+          // Inactive Brown Block
+          ctx.fillStyle = '#78716c';
+          ctx.fillRect(0, 0, this.width, this.height);
+          ctx.strokeStyle = '#44403c';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(1, 1, this.width - 2, this.height - 2);
+
+          ctx.fillStyle = '#292524';
+          ctx.fillRect(4, 4, 3, 3);
+          ctx.fillRect(this.width - 7, 4, 3, 3);
+          ctx.fillRect(4, this.height - 7, 3, 3);
+          ctx.fillRect(this.width - 7, this.height - 7, 3, 3);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 8. ENEMIES (FOX, BIRD, BOSS FOX)
+    // ==========================================
+    class FoxEnemy {
+      constructor(x, y, patrolDist = 180) {
+        this.x = x;
+        this.y = y;
+        this.startX = x;
+        this.width = 38;
+        this.height = 30;
+        this.vx = -1.2;
+        this.patrolDist = patrolDist;
+        this.isAlive = true;
+        this.deathTimer = 0;
+        this.runCycle = 0;
+      }
+
+      update(game, theme) {
+        if (!this.isAlive) {
+          this.deathTimer--;
+          return;
+        }
+
+        const speed = Math.abs(this.vx) * theme.enemySpeedMul;
+        this.x += (this.vx > 0 ? speed : -speed);
+
+        if (this.x < this.startX - this.patrolDist) {
+          this.vx = Math.abs(this.vx);
+        } else if (this.x > this.startX) {
+          this.vx = -Math.abs(this.vx);
+        }
+
+        this.runCycle += 0.2;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height);
+        ctx.scale(this.vx > 0 ? -1 : 1, 1);
+
+        if (!this.isAlive) {
+          // Squished flat on stomp death
+          ctx.scale(1.2, 0.25);
+          ctx.fillStyle = '#ea580c';
+          ctx.beginPath();
+          ctx.roundRect(-16, -20, 32, 20, 4);
+          ctx.fill();
+          ctx.restore();
+          return;
+        }
+
+        const legWobble = Math.sin(this.runCycle) * 4;
+
+        // Bushy Tail
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath();
+        ctx.ellipse(16, -16, 12, 6, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(24, -14, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs
+        ctx.fillStyle = '#1e1b4b';
+        ctx.fillRect(-12 + legWobble, -6, 5, 6);
+        ctx.fillRect(8 - legWobble, -6, 5, 6);
+
+        // Body
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath();
+        ctx.roundRect(-14, -22, 28, 18, 6);
+        ctx.fill();
+
+        // White Belly & chest
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(-14, -16, 12, 10, 4);
+        ctx.fill();
+
+        // Ears
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath();
+        ctx.moveTo(-12, -22); ctx.lineTo(-8, -32); ctx.lineTo(-4, -22); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-4, -22); ctx.lineTo(0, -32); ctx.lineTo(4, -22); ctx.fill();
+
+        ctx.fillStyle = '#1e1b4b';
+        ctx.beginPath();
+        ctx.moveTo(-10, -22); ctx.lineTo(-8, -28); ctx.lineTo(-6, -22); ctx.fill();
+
+        // Black Nose & Eyes
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(-13, -17, 2, 0, Math.PI * 2); // eye
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(-16, -14, 2.5, 0, Math.PI * 2); // nose
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
+    class BirdEnemy {
+      constructor(x, y, range = 240) {
+        this.x = x;
+        this.y = y;
+        this.baseY = y;
+        this.startX = x;
+        this.width = 30;
+        this.height = 24;
+        this.vx = -1.6;
+        this.range = range;
+        this.flyAngle = Math.random() * Math.PI * 2;
+        this.isAlive = true;
+        this.deathTimer = 0;
+      }
+
+      update(game, theme) {
+        if (!this.isAlive) {
+          this.deathTimer--;
+          this.y += 4; // fall down
+          return;
+        }
+
+        const speed = Math.abs(this.vx) * theme.enemySpeedMul;
+        this.x += (this.vx > 0 ? speed : -speed);
+        this.flyAngle += 0.08;
+        this.y = this.baseY + Math.sin(this.flyAngle) * 35; // Sine wave flight
+
+        if (this.x < this.startX - this.range) {
+          this.vx = Math.abs(this.vx);
+        } else if (this.x > this.startX) {
+          this.vx = -Math.abs(this.vx);
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+        ctx.scale(this.vx > 0 ? -1 : 1, 1);
+
+        const wingFlap = Math.sin(this.flyAngle * 4) * 8;
+
+        // Tail feathers
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(10, 0); ctx.lineTo(16, -4); ctx.lineTo(14, 2); ctx.fill();
+
+        // Body
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 12, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White belly
+        ctx.fillStyle = '#e0f2fe';
+        ctx.beginPath();
+        ctx.ellipse(-2, 3, 7, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wing
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.ellipse(1, -2 + wingFlap, 8, 4, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Yellow Beak
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(-11, -2); ctx.lineTo(-17, 1); ctx.lineTo(-11, 4); ctx.fill();
+
+        // Eye
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(-7, -2, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
+    class BossFox {
+      constructor(x, y, hp = 6, stage = 1) {
+        this.x = x;
+        this.y = y;
+        this.startX = x;
+        this.stage = stage;
+        this.width = 64;
+        this.height = 54;
+        this.maxHp = hp;
+        this.hp = hp;
+        this.vx = -2.0;
+        this.vy = 0;
+        this.isGrounded = true;
+        this.facing = -1;
+        this.hurtTimer = 0;
+        this.isAlive = true;
+        this.jumpCooldown = 90;
+        this.runCycle = 0;
+      }
+
+      takeHit(damage = 1, game) {
+        if (this.hurtTimer > 0 || !this.isAlive) return;
+        this.hp -= damage;
+        this.hurtTimer = 40;
+        sound.playBossHit();
+        game.screenShake = 16;
+        game.addFloatingText(this.x + this.width / 2, this.y, `BOSS HIT! (-${damage})`, '#ef4444', 16);
+
+        // Spark explosion
+        for (let i = 0; i < 15; i++) {
+          game.particles.push(new Particle(
+            this.x + this.width / 2,
+            this.y + this.height / 2,
+            (Math.random() - 0.5) * 8,
+            (Math.random() - 0.5) * 8,
+            '#f59e0b',
+            5,
+            30
+          ));
+        }
+
+        if (this.hp <= 0) {
+          this.hp = 0;
+          this.isAlive = false;
+          game.bossDefeated(this);
+        }
+      }
+
+      update(game, targetPlayer) {
+        if (!this.isAlive) return;
+
+        if (this.hurtTimer > 0) this.hurtTimer--;
+
+        // AI Logic: Walk and periodically jump towards player
+        const dist = (targetPlayer.x + targetPlayer.width / 2) - (this.x + this.width / 2);
+        this.facing = dist > 0 ? 1 : -1;
+
+        // Horizontal rush
+        this.x += this.facing * 1.8;
+
+        // Periodic Jump Attack
+        this.jumpCooldown--;
+        if (this.jumpCooldown <= 0 && this.isGrounded) {
+          this.vy = -10;
+          this.isGrounded = false;
+          this.jumpCooldown = 120 + Math.floor(Math.random() * 60);
+
+          // Spawn ground shockwaves on jump
+          game.particles.push(new Particle(this.x + 10, GROUND_Y, -3, -1, '#ef4444', 6, 20));
+          game.particles.push(new Particle(this.x + this.width - 10, GROUND_Y, 3, -1, '#ef4444', 6, 20));
+        }
+
+        // Apply Boss Gravity
+        this.vy += GRAVITY;
+        this.y += this.vy;
+
+        if (this.y + this.height >= GROUND_Y) {
+          this.y = GROUND_Y - this.height;
+          this.vy = 0;
+          this.isGrounded = true;
+        }
+
+        this.runCycle += 0.25;
+      }
+
+      draw(ctx) {
+        if (!this.isAlive && Math.floor(Date.now() / 100) % 2 === 0) return;
+
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height);
+        ctx.scale(this.facing === 1 ? -1 : 1, 1);
+
+        // Flash red when hurt
+        if (this.hurtTimer > 0 && Math.floor(this.hurtTimer / 4) % 2 === 0) {
+          ctx.filter = 'brightness(2) drop-shadow(0 0 12px red)';
+        }
+
+        const w = this.width;
+        const h = this.height;
+
+        // Boss Tail
+        ctx.fillStyle = '#c2410c';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.45, -h * 0.45, 18, 10, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(w * 0.65, -h * 0.4, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs
+        const leg = Math.sin(this.runCycle) * 6;
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-w * 0.35 + leg, -10, 9, 10);
+        ctx.fillRect(w * 0.15 - leg, -10, 9, 10);
+
+        // Heavy Body
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.4, -h * 0.8, w * 0.8, h * 0.68, 10);
+        ctx.fill();
+
+        // Chest white fur
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.roundRect(-w * 0.4, -h * 0.6, w * 0.35, h * 0.45, 6);
+        ctx.fill();
+
+        // Ears
+        ctx.fillStyle = '#c2410c';
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.3, -h * 0.8);
+        ctx.lineTo(-w * 0.2, -h * 1.15);
+        ctx.lineTo(-w * 0.05, -h * 0.8);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.05, -h * 0.8);
+        ctx.lineTo(w * 0.08, -h * 1.15);
+        ctx.lineTo(w * 0.2, -h * 0.8);
+        ctx.fill();
+
+        // Face details
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-w * 0.25, -h * 0.6, 5, 0, Math.PI * 2); // angry eye
+        ctx.fill();
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(-w * 0.27, -h * 0.6, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Golden Royal Crown for Boss
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = '#ca8a04';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.15, -h * 0.82);
+        ctx.lineTo(-w * 0.22, -h * 1.05);
+        ctx.lineTo(-w * 0.05, -h * 0.92);
+        ctx.lineTo(w * 0.12, -h * 1.05);
+        ctx.lineTo(w * 0.05, -h * 0.82);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Crown Jewel
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(-w * 0.05, -h * 0.88, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Draw Boss Health Bar above boss
+        ctx.save();
+        const barW = 80;
+        const barH = 8;
+        const barX = this.x + this.width / 2 - barW / 2;
+        const barY = this.y - 18;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, barH);
+
+        const fillW = Math.max(0, (this.hp / this.maxHp) * (barW - 2));
+        ctx.fillStyle = this.hp < 3 ? '#ef4444' : '#f59e0b';
+        ctx.fillRect(barX + 1, barY + 1, fillW, barH - 2);
+
+        ctx.font = 'bold 9px "Press Start 2P", monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(`BOSS HP: ${this.hp}`, this.x + this.width / 2, barY - 4);
+        ctx.restore();
+      }
+    }
+
+    // Obstacle: Rocks and Spiky Bushes
+    class Hazard {
+      constructor(x, y, type = 'rock') {
+        this.x = x;
+        this.y = y;
+        this.type = type; // 'rock', 'bush'
+        this.width = type === 'rock' ? 28 : 34;
+        this.height = type === 'rock' ? 22 : 24;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        if (this.type === 'rock') {
+          // Grey jagged rock
+          ctx.fillStyle = '#64748b';
+          ctx.beginPath();
+          ctx.moveTo(0, this.height);
+          ctx.lineTo(6, 4);
+          ctx.lineTo(16, 0);
+          ctx.lineTo(24, 6);
+          ctx.lineTo(this.width, this.height);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.beginPath();
+          ctx.moveTo(6, 4);
+          ctx.lineTo(16, 0);
+          ctx.lineTo(12, 10);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // Spiky Thorn Bush
+          ctx.fillStyle = '#7f1d1d';
+          ctx.beginPath();
+          ctx.arc(this.width / 2, this.height / 2 + 4, 14, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Sharp red spikes
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.moveTo(4, 12); ctx.lineTo(0, 0); ctx.lineTo(10, 8);
+          ctx.moveTo(14, 6); ctx.lineTo(18, -4); ctx.lineTo(22, 6);
+          ctx.moveTo(24, 8); ctx.lineTo(34, 2); ctx.lineTo(28, 14);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 9. STAGE GOAL FLAG
+    // ==========================================
+    class GoalFlag {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 30;
+        this.height = 140;
+        this.flagY = 0;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Gold finial ball
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(4, 4, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pole
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(2, 4, 4, this.height);
+
+        // Flag triangle (waving)
+        const wave = Math.sin(Date.now() / 200) * 4;
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.moveTo(6, 10);
+        ctx.lineTo(32 + wave, 22);
+        ctx.lineTo(6, 36);
+        ctx.closePath();
+        ctx.fill();
+
+        // Base
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(-6, this.height - 8, 20, 8);
+
+        ctx.restore();
+      }
+    }
+
+    // ==========================================
+    // 10. GAME ENGINE & LEVEL MANAGER
+    // ==========================================
+    class RabbitRunnerGame {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.state = GameState.MENU;
+        this.isTwoPlayer = false;
+
+        this.currentStage = 1;
+        this.maxStages = 3;
+        this.cameraX = 0;
+        this.levelLength = 2600; // pixels to goal / boss arena
+        this.screenShake = 0;
+
+        // Players
+        this.p1 = new Player(1, 100, GROUND_Y - 50, {
+          body: '#ffffff',
+          belly: '#f1f5f9',
+          earInner: '#f472b6',
+          scarf: '#0284c7', // Blue scarf
+          eye: '#0f172a'
+        });
+
+        this.p2 = new Player(2, 60, GROUND_Y - 50, {
+          body: '#d6d3d1',
+          belly: '#fafaf9',
+          earInner: '#fb7185',
+          scarf: '#dc2626', // Red scarf
+          eye: '#0f172a'
+        });
+
+        // Level Entities
+        this.carrots = [];
+        this.powerUps = [];
+        this.blocks = [];
+        this.enemies = [];
+        this.hazards = [];
+        this.pits = []; // x ranges: [start, end]
+        this.boss = null;
+        this.goalFlag = null;
+        this.particles = [];
+        this.floatingTexts = [];
+
+        // Combo system
+        this.comboCount = 0;
+        this.comboTimer = 0;
+
+        // Clouds & Parallax
+        this.clouds = [
+          { x: 50, y: 40, s: 1.2, sp: 0.3 },
+          { x: 300, y: 70, s: 0.9, sp: 0.2 },
+          { x: 580, y: 35, s: 1.4, sp: 0.35 },
+          { x: 820, y: 60, s: 1.0, sp: 0.25 }
+        ];
+
+        // High score
+        this.highScore = parseInt(localStorage.getItem('rabbit_runner_highscore') || '0', 10);
+
+        this.setupEventListeners();
+        this.generateStage(1);
+      }
+
+      setupEventListeners() {
+        // Pause key ESC
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'Escape') {
+            if (this.state === GameState.PLAYING) {
+              this.state = GameState.PAUSED;
+            } else if (this.state === GameState.PAUSED) {
+              this.state = GameState.PLAYING;
+            }
+          }
+        });
+
+        // Canvas Click handler for Menus & Buttons
+        this.canvas.addEventListener('click', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const scaleX = this.canvas.width / rect.width;
+          const scaleY = this.canvas.height / rect.height;
+          const clickX = (e.clientX - rect.left) * scaleX;
+          const clickY = (e.clientY - rect.top) * scaleY;
+
+          this.handleClick(clickX, clickY);
+        });
+
+        // Sound Button
+        const sBtn = document.getElementById('soundBtn');
+        if (sBtn) {
+          sBtn.addEventListener('click', () => {
+            const isMuted = sound.toggleMute();
+            const icon = document.getElementById('soundIcon');
+            if (icon) {
+              icon.className = isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+            }
+          });
+        }
+
+        // Fullscreen Button
+        const fsBtn = document.getElementById('fullscreenBtn');
+        if (fsBtn) {
+          fsBtn.addEventListener('click', () => {
+            const el = document.getElementById('gameWrapper');
+            if (!document.fullscreenElement) {
+              el.requestFullscreen().catch(err => alert(`Error enabling full-screen: ${err.message}`));
+            } else {
+              document.exitFullscreen();
+            }
+          });
+        }
+      }
+
+      handleClick(x, y) {
+        sound.init();
+
+        if (this.state === GameState.MENU) {
+          // "1 Player" Button (rect: [260, 240, 280, 50])
+          if (x >= 250 && x <= 550 && y >= 230 && y <= 285) {
+            this.startGame(false);
+          }
+          // "2 Player Co-op" Button (rect: [260, 305, 280, 50])
+          else if (x >= 250 && x <= 550 && y >= 300 && y <= 355) {
+            this.startGame(true);
+          }
+        } else if (this.state === GameState.PAUSED) {
+          // Resume
+          if (x >= 300 && x <= 500 && y >= 190 && y <= 235) {
+            this.state = GameState.PLAYING;
+          }
+          // Restart
+          else if (x >= 300 && x <= 500 && y >= 250 && y <= 295) {
+            this.startGame(this.isTwoPlayer);
+          }
+          // Quit to Menu
+          else if (x >= 300 && x <= 500 && y >= 310 && y <= 355) {
+            this.state = GameState.MENU;
+          }
+        } else if (this.state === GameState.STAGE_CLEAR) {
+          // Next Stage Button
+          if (x >= 280 && x <= 520 && y >= 280 && y <= 335) {
+            if (this.currentStage < this.maxStages) {
+              this.currentStage++;
+              this.loadStage(this.currentStage);
+              this.state = GameState.PLAYING;
+            } else {
+              this.state = GameState.VICTORY;
+            }
+          }
+        } else if (this.state === GameState.GAME_OVER || this.state === GameState.VICTORY) {
+          // Try Again Button
+          if (x >= 280 && x <= 520 && y >= 280 && y <= 335) {
+            this.currentStage = 1;
+            this.startGame(this.isTwoPlayer);
+          }
+          // Main Menu Button
+          else if (x >= 280 && x <= 520 && y >= 350 && y <= 400) {
+            this.state = GameState.MENU;
+          }
+        }
+      }
+
+      startGame(twoPlayer = false) {
+        this.isTwoPlayer = twoPlayer;
+        this.currentStage = 1;
+        this.p1.reset(100, GROUND_Y - 50);
+        this.p1.lives = 3;
+        this.p1.score = 0;
+        this.p1.carrotsCollected = 0;
+
+        if (this.isTwoPlayer) {
+          this.p2.reset(50, GROUND_Y - 50);
+          this.p2.lives = 3;
+          this.p2.score = 0;
+          this.p2.carrotsCollected = 0;
+        }
+
+        this.loadStage(1);
+        this.state = GameState.PLAYING;
+      }
+
+      loadStage(stageNum) {
+        this.currentStage = stageNum;
+        this.cameraX = 0;
+        this.comboCount = 0;
+        this.comboTimer = 0;
+
+        // Reset positions
+        this.p1.reset(100, GROUND_Y - 50);
+        if (this.isTwoPlayer) {
+          this.p2.reset(60, GROUND_Y - 50);
+        }
+
+        this.generateStage(stageNum);
+      }
+
+      generateStage(stageNum) {
+        this.carrots = [];
+        this.powerUps = [];
+        this.blocks = [];
+        this.enemies = [];
+        this.hazards = [];
+        this.pits = [];
+        this.particles = [];
+        this.floatingTexts = [];
+
+        const theme = StageThemes[stageNum];
+        this.levelLength = 2600 + (stageNum - 1) * 600;
+
+        // Pits in Stage 2 and Stage 3
+        if (stageNum >= 2) {
+          this.pits.push({ start: 850, end: 970 });
+          this.pits.push({ start: 1600, end: 1740 });
+        }
+        if (stageNum === 3) {
+          this.pits.push({ start: 2200, end: 2360 });
+        }
+
+        // Procedural Level Generation along the path
+        let x = 320;
+        while (x < this.levelLength - 400) {
+          // Check if in pit
+          const inPit = this.pits.some(p => x >= p.start - 40 && x <= p.end + 40);
+
+          if (!inPit) {
+            const roll = Math.random();
+
+            // 1. Carrot cluster on ground or arch
+            if (roll < 0.35) {
+              const clusterSize = 3 + Math.floor(Math.random() * 3);
+              for (let c = 0; c < clusterSize; c++) {
+                this.carrots.push(new Carrot(x + c * 32, GROUND_Y - 40));
+              }
+              x += clusterSize * 34 + 60;
+            }
+            // 2. Question / Brick Platform with carrots or power-up
+            else if (roll < 0.65) {
+              const blockY = GROUND_Y - 100 - (Math.random() < 0.5 ? 40 : 0);
+              const numBlocks = 3 + Math.floor(Math.random() * 3);
+              const specialIdx = Math.floor(Math.random() * numBlocks);
+              const pTypes = ['lightning', 'mushroom', 'star', 'carrot'];
+              const chosenP = pTypes[Math.floor(Math.random() * pTypes.length)];
+
+              for (let b = 0; b < numBlocks; b++) {
+                const isSpecial = (b === specialIdx);
+                this.blocks.push(new Block(
+                  x + b * 38,
+                  blockY,
+                  36,
+                  36,
+                  isSpecial ? 'question' : 'brick',
+                  isSpecial ? chosenP : null
+                ));
+
+                // Carrots on top of blocks
+                if (!isSpecial && Math.random() < 0.5) {
+                  this.carrots.push(new Carrot(x + b * 38 + 8, blockY - 36));
+                }
+              }
+              x += numBlocks * 38 + 80;
+            }
+            // 3. Ground Obstacle (Rock or Spike)
+            else if (roll < 0.85) {
+              const hType = (stageNum >= 2 && Math.random() < 0.5) ? 'bush' : 'rock';
+              this.hazards.push(new Hazard(x, GROUND_Y - 22, hType));
+              x += 120;
+            }
+            // 4. Enemy Patrol (Fox or Bird)
+            else {
+              if (Math.random() < 0.6) {
+                this.enemies.push(new FoxEnemy(x, GROUND_Y - 30, 160));
+              } else {
+                this.enemies.push(new BirdEnemy(x, GROUND_Y - 140, 200));
+              }
+              x += 140;
+            }
+          } else {
+            // In pit area: create floating stepping-stone blocks over pit
+            const pitObj = this.pits.find(p => x >= p.start - 40 && x <= p.end + 40);
+            if (pitObj) {
+              const mid = (pitObj.start + pitObj.end) / 2;
+              this.blocks.push(new Block(mid - 40, GROUND_Y - 70, 36, 36, 'brick'));
+              this.blocks.push(new Block(mid + 10, GROUND_Y - 70, 36, 36, 'brick'));
+              this.carrots.push(new Carrot(mid - 32, GROUND_Y - 105));
+              this.carrots.push(new Carrot(mid + 18, GROUND_Y - 105));
+              x = pitObj.end + 80;
+            } else {
+              x += 100;
+            }
+          }
+        }
+
+        // Boss & Arena at the end of the stage
+        const bossHp = theme.bossHp;
+        this.boss = new BossFox(this.levelLength - 120, GROUND_Y - 54, bossHp, stageNum);
+
+        // Stage Goal Flag behind Boss
+        this.goalFlag = new GoalFlag(this.levelLength + 150, GROUND_Y - 140);
+      }
+
+      addFloatingText(x, y, text, color, size) {
+        this.floatingTexts.push(new FloatingText(x, y, text, color, size));
+      }
+
+      bossDefeated(boss) {
+        sound.playStageClear();
+        this.addFloatingText(boss.x + boss.width / 2, boss.y, "BOSS DEFEATED!", "#facc15", 22);
+
+        // Huge celebration sparkles
+        for (let i = 0; i < 40; i++) {
+          this.particles.push(new Particle(
+            boss.x + boss.width / 2,
+            boss.y + boss.height / 2,
+            (Math.random() - 0.5) * 12,
+            (Math.random() - 0.5) * 12,
+            '#fbbf24',
+            6,
+            45,
+            'star'
+          ));
+        }
+
+        // Add 500 bonus points
+        this.p1.score += 500;
+        if (this.isTwoPlayer && this.p2.isAlive) this.p2.score += 500;
+      }
+
+      update() {
+        if (this.state !== GameState.PLAYING) return;
+
+        // Screen Shake decay
+        if (this.screenShake > 0) this.screenShake *= 0.88;
+
+        // Combo Timer decay
+        if (this.comboTimer > 0) {
+          this.comboTimer--;
+          if (this.comboTimer <= 0) {
+            this.comboCount = 0;
+          }
+        }
+
+        const theme = StageThemes[this.currentStage];
+
+        // 1. Update Players
+        this.p1.update(
+          input.isP1Left(),
+          input.isP1Right(),
+          input.isP1Up(),
+          input.isP1Down(),
+          this
+        );
+
+        if (this.isTwoPlayer) {
+          this.p2.update(
+            input.isP2Left(),
+            input.isP2Right(),
+            input.isP2Up(),
+            input.isP2Down(),
+            this
+          );
+        }
+
+        // 2. Camera Tracking (center on average of alive players or lead player)
+        let targetCamX = this.p1.x - 240;
+        if (this.isTwoPlayer && this.p1.isAlive && this.p2.isAlive) {
+          targetCamX = (this.p1.x + this.p2.x) / 2 - 240;
+        } else if (!this.p1.isAlive && this.p2.isAlive) {
+          targetCamX = this.p2.x - 240;
+        }
+        targetCamX = Math.max(0, Math.min(this.levelLength + 200 - CANVAS_WIDTH, targetCamX));
+        this.cameraX += (targetCamX - this.cameraX) * 0.12;
+
+        // 3. Ground & Pit Collisions for Players
+        const checkPlayerGround = (player) => {
+          if (!player.isAlive) return;
+
+          // Check if falling into a Pit
+          const inPit = this.pits.some(p => player.x + player.width * 0.5 > p.start && player.x + player.width * 0.5 < p.end);
+
+          if (player.y + player.height >= GROUND_Y) {
+            if (inPit) {
+              // Fallen into pit
+              if (player.y > CANVAS_HEIGHT + 30) {
+                player.takeDamage(this);
+                // Respawn before pit
+                const safePit = this.pits.find(p => player.x + player.width * 0.5 > p.start && player.x + player.width * 0.5 < p.end);
+                player.x = safePit ? safePit.start - 60 : 100;
+                player.y = GROUND_Y - 80;
+                player.vy = 0;
+              }
+            } else {
+              player.y = GROUND_Y - player.height;
+              player.vy = 0;
+              player.isGrounded = true;
+            }
+          }
+
+          // Screen left boundary clamp
+          if (player.x < this.cameraX) {
+            player.x = this.cameraX;
+            if (player.vx < 0) player.vx = 0;
+          }
+        };
+
+        checkPlayerGround(this.p1);
+        if (this.isTwoPlayer) checkPlayerGround(this.p2);
+
+        // 4. Block Collisions (Solid platforms & question bumps)
+        const checkBlockCollisions = (player) => {
+          if (!player.isAlive) return;
+
+          for (const b of this.blocks) {
+            if (b.broken) continue;
+
+            const px = player.x;
+            const py = player.y;
+            const pw = player.width;
+            const ph = player.height;
+
+            const bx = b.x;
+            const by = b.y;
+            const bw = b.width;
+            const bh = b.height;
+
+            // AABB Collision Check
+            if (px + pw > bx && px < bx + bw && py + ph > by && py < by + bh) {
+              const prevY = py - player.vy;
+
+              // Landing on top of block
+              if (prevY + ph <= by + 10 && player.vy >= 0) {
+                player.y = by - ph;
+                player.vy = 0;
+                player.isGrounded = true;
+              }
+              // Hitting block from below with head
+              else if (prevY >= by + bh - 10 && player.vy < 0) {
+                player.y = by + bh;
+                player.vy = 0;
+                b.bump(this, player);
+              }
+              // Side collisions
+              else if (px + pw * 0.5 < bx + bw * 0.5) {
+                player.x = bx - pw;
+                player.vx = 0;
+              } else {
+                player.x = bx + bw;
+                player.vx = 0;
+              }
+            }
+          }
+        };
+
+        checkBlockCollisions(this.p1);
+        if (this.isTwoPlayer) checkBlockCollisions(this.p2);
+
+        // 5. Update Blocks
+        this.blocks.forEach(b => b.update());
+
+        // 6. Collect Carrots
+        this.carrots.forEach(c => {
+          if (c.collected) return;
+          c.update();
+
+          const checkCarrot = (p) => {
+            if (!p.isAlive) return;
+            if (p.x + p.width > c.x && p.x < c.x + c.width &&
+                p.y + p.height > c.y && p.y < c.y + c.height) {
+              c.collected = true;
+              this.comboCount++;
+              this.comboTimer = 140; // ~2.3 seconds
+              sound.playCarrot(this.comboCount);
+
+              const points = 10 * Math.min(this.comboCount, 5);
+              p.score += points;
+              p.carrotsCollected++;
+
+              // Sparkle particles
+              for (let i = 0; i < 6; i++) {
+                this.particles.push(new Particle(
+                  c.x + c.width / 2,
+                  c.y + c.height / 2,
+                  (Math.random() - 0.5) * 4,
+                  (Math.random() - 0.5) * 4,
+                  '#f59e0b',
+                  4,
+                  20,
+                  'star'
+                ));
+              }
+
+              const msg = this.comboCount > 1 ? `+${points} Combo x${this.comboCount}!` : `+${points}`;
+              this.addFloatingText(c.x + c.width / 2, c.y - 10, msg, '#fbbf24', 12);
+            }
+          };
+
+          checkCarrot(this.p1);
+          if (this.isTwoPlayer) checkCarrot(this.p2);
+        });
+
+        // 7. Collect Power-Ups
+        this.powerUps.forEach(pu => {
+          if (pu.collected) return;
+          pu.update();
+
+          const checkPowerUp = (p) => {
+            if (!p.isAlive) return;
+            if (p.x + p.width > pu.x && p.x < pu.x + pu.width &&
+                p.y + p.height > pu.y && p.y < pu.y + pu.height) {
+              pu.collected = true;
+              sound.playPowerup();
+              p.score += 150;
+
+              if (pu.type === 'lightning') {
+                p.lightningTimer = 300; // 5 seconds
+                this.addFloatingText(p.x + p.width / 2, p.y - 20, "LIGHTNING SPEED!", "#facc15", 14);
+              } else if (pu.type === 'mushroom') {
+                p.mushroomTimer = 480; // 8 seconds
+                this.addFloatingText(p.x + p.width / 2, p.y - 20, "SUPER MUSHROOM!", "#ef4444", 14);
+              } else if (pu.type === 'star') {
+                p.starTimer = 360; // 6 seconds
+                this.addFloatingText(p.x + p.width / 2, p.y - 20, "STAR INVINCIBILITY!", "#38bdf8", 14);
+              }
+
+              for (let i = 0; i < 15; i++) {
+                this.particles.push(new Particle(
+                  pu.x + pu.width / 2,
+                  pu.y + pu.height / 2,
+                  (Math.random() - 0.5) * 6,
+                  (Math.random() - 0.5) * 6,
+                  '#38bdf8',
+                  5,
+                  25
+                ));
+              }
+            }
+          };
+
+          checkPowerUp(this.p1);
+          if (this.isTwoPlayer) checkPowerUp(this.p2);
+        });
+
+        // 8. Hazards Collision (Rocks / Spikes)
+        this.hazards.forEach(h => {
+          const checkHazard = (p) => {
+            if (!p.isAlive) return;
+            if (p.x + p.width > h.x + 4 && p.x < h.x + h.width - 4 &&
+                p.y + p.height > h.y + 4 && p.y < h.y + h.height) {
+              p.takeDamage(this);
+            }
+          };
+          checkHazard(this.p1);
+          if (this.isTwoPlayer) checkHazard(this.p2);
+        });
+
+        // 9. Enemy Interactions & Stomp
+        this.enemies.forEach(en => {
+          en.update(this, theme);
+          if (!en.isAlive && en.deathTimer <= 0) return;
+
+          const checkEnemy = (p) => {
+            if (!p.isAlive || !en.isAlive) return;
+
+            const px = p.x;
+            const py = p.y;
+            const pw = p.width;
+            const ph = p.height;
+
+            const ex = en.x;
+            const ey = en.y;
+            const ew = en.width;
+            const eh = en.height;
+
+            // Overlap check
+            if (px + pw > ex && px < ex + ew && py + ph > ey && py < ey + eh) {
+              // A: Star Invincibility: Instakill enemy!
+              if (p.starTimer > 0) {
+                en.isAlive = false;
+                en.deathTimer = 20;
+                sound.playStomp();
+                p.score += 100;
+                this.addFloatingText(ex + ew / 2, ey, "+100 SMASH!", "#facc15", 14);
+                return;
+              }
+
+              // B: Stomp from above (or Mushroom stomp)
+              const hitTop = (py + ph - p.vy) <= ey + 14 && p.vy > 0;
+              if (hitTop || p.mushroomTimer > 0) {
+                en.isAlive = false;
+                en.deathTimer = 30;
+                p.vy = -9; // bounce player upward
+                sound.playStomp();
+                p.score += 100;
+                this.addFloatingText(ex + ew / 2, ey, "+100 STOMP!", "#38bdf8", 14);
+
+                // Stomp dust
+                for (let i = 0; i < 8; i++) {
+                  this.particles.push(new Particle(
+                    ex + ew / 2,
+                    ey + eh / 2,
+                    (Math.random() - 0.5) * 4,
+                    -Math.random() * 3,
+                    '#f97316',
+                    4,
+                    20
+                  ));
+                }
+              }
+              // C: Player takes damage from enemy touch
+              else {
+                p.takeDamage(this);
+              }
+            }
+          };
+
+          checkEnemy(this.p1);
+          if (this.isTwoPlayer) checkEnemy(this.p2);
+        });
+
+        // 10. Boss Interaction
+        if (this.boss && this.boss.isAlive) {
+          const aliveHero = this.p1.isAlive ? this.p1 : (this.p2.isAlive ? this.p2 : this.p1);
+          this.boss.update(this, aliveHero);
+
+          const checkBoss = (p) => {
+            if (!p.isAlive || !this.boss.isAlive) return;
+
+            const px = p.x;
+            const py = p.y;
+            const pw = p.width;
+            const ph = p.height;
+
+            const bx = this.boss.x;
+            const by = this.boss.y;
+            const bw = this.boss.width;
+            const bh = this.boss.height;
+
+            if (px + pw > bx && px < bx + bw && py + ph > by && py < by + bh) {
+              // Stomp on Boss head
+              const hitTop = (py + ph - p.vy) <= by + 20 && p.vy > 0;
+              if (hitTop || p.starTimer > 0) {
+                p.vy = -11; // high bounce
+                this.boss.takeHit(p.mushroomTimer > 0 ? 2 : 1, this);
+              } else {
+                p.takeDamage(this);
+              }
+            }
+          };
+
+          checkBoss(this.p1);
+          if (this.isTwoPlayer) checkBoss(this.p2);
+        }
+
+        // 11. Goal Flag Collision (Stage Clear!)
+        if (this.goalFlag && (!this.boss || !this.boss.isAlive)) {
+          const checkGoal = (p) => {
+            if (!p.isAlive) return;
+            if (p.x + p.width > this.goalFlag.x && p.x < this.goalFlag.x + this.goalFlag.width &&
+                p.y + p.height > this.goalFlag.y) {
+              this.state = GameState.STAGE_CLEAR;
+              sound.playStageClear();
+
+              // Update High Score
+              const totalScore = this.p1.score + (this.isTwoPlayer ? this.p2.score : 0);
+              if (totalScore > this.highScore) {
+                this.highScore = totalScore;
+                localStorage.setItem('rabbit_runner_highscore', this.highScore);
+              }
+            }
+          };
+
+          checkGoal(this.p1);
+          if (this.isTwoPlayer) checkGoal(this.p2);
+        }
+
+        // 12. Check Game Over (both players dead)
+        if (!this.p1.isAlive && (!this.isTwoPlayer || !this.p2.isAlive)) {
+          this.state = GameState.GAME_OVER;
+          sound.playGameOver();
+
+          const totalScore = this.p1.score + (this.isTwoPlayer ? this.p2.score : 0);
+          if (totalScore > this.highScore) {
+            this.highScore = totalScore;
+            localStorage.setItem('rabbit_runner_highscore', this.highScore);
+          }
+        }
+
+        // 13. Update Particles & Floating Texts
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          this.particles[i].update();
+          if (this.particles[i].life <= 0) {
+            this.particles.splice(i, 1);
+          }
+        }
+
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+          this.floatingTexts[i].update();
+          if (this.floatingTexts[i].life <= 0) {
+            this.floatingTexts.splice(i, 1);
+          }
+        }
+      }
+
+      // ==========================================
+      // RENDERING ENGINE
+      // ==========================================
+      draw() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        const theme = StageThemes[this.currentStage];
+
+        // Screen Shake offset
+        ctx.save();
+        if (this.screenShake > 0.5) {
+          const shakeX = (Math.random() - 0.5) * this.screenShake;
+          const shakeY = (Math.random() - 0.5) * this.screenShake;
+          ctx.translate(shakeX, shakeY);
+        }
+
+        // 1. Draw Parallax Background
+        this.drawBackground(ctx, theme);
+
+        // 2. Draw World Entities (offset by cameraX)
+        ctx.save();
+        ctx.translate(-Math.floor(this.cameraX), 0);
+
+        // Ground & Pits
+        this.drawGround(ctx, theme);
+
+        // Blocks
+        this.blocks.forEach(b => b.draw(ctx, theme));
+
+        // Hazards
+        this.hazards.forEach(h => h.draw(ctx));
+
+        // Carrots
+        this.carrots.forEach(c => c.draw(ctx));
+
+        // Power-ups
+        this.powerUps.forEach(pu => pu.draw(ctx));
+
+        // Goal Flag
+        if (this.goalFlag) this.goalFlag.draw(ctx);
+
+        // Enemies
+        this.enemies.forEach(en => en.draw(ctx));
+
+        // Boss
+        if (this.boss) this.boss.draw(ctx);
+
+        // Players
+        this.p1.draw(ctx);
+        if (this.isTwoPlayer) this.p2.draw(ctx);
+
+        // Particles
+        this.particles.forEach(p => p.draw(ctx));
+
+        // Floating texts
+        this.floatingTexts.forEach(ft => ft.draw(ctx));
+
+        ctx.restore(); // restore camera translation
+        ctx.restore(); // restore screen shake
+
+        // 3. Draw HUD (Screen space)
+        if (this.state === GameState.PLAYING || this.state === GameState.PAUSED) {
+          this.drawHUD(ctx, theme);
+        }
+
+        // 4. Draw Overlay Screens (Menu, Paused, Stage Clear, Game Over, Victory)
+        if (this.state === GameState.MENU) {
+          this.drawMenuScreen(ctx);
+        } else if (this.state === GameState.PAUSED) {
+          this.drawPauseScreen(ctx);
+        } else if (this.state === GameState.STAGE_CLEAR) {
+          this.drawStageClearScreen(ctx);
+        } else if (this.state === GameState.GAME_OVER) {
+          this.drawGameOverScreen(ctx);
+        } else if (this.state === GameState.VICTORY) {
+          this.drawVictoryScreen(ctx);
+        }
+      }
+
+      drawBackground(ctx, theme) {
+        // Sky Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+        skyGrad.addColorStop(0, theme.skyTop);
+        skyGrad.addColorStop(1, theme.skyBottom);
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // Celestial Body (Sun/Moon)
+        ctx.fillStyle = theme.sunColor;
+        ctx.beginPath();
+        ctx.arc(CANVAS_WIDTH - 120, 80, 36, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stage 3 Starfield
+        if (this.currentStage === 3) {
+          ctx.fillStyle = '#ffffff';
+          for (let i = 0; i < 40; i++) {
+            const sx = (i * 123) % CANVAS_WIDTH;
+            const sy = (i * 77) % 200;
+            const sz = (i % 3 === 0) ? 2 : 1;
+            ctx.fillRect(sx, sy, sz, sz);
+          }
+        }
+
+        // Distant Parallax Hills (Layer 1)
+        ctx.fillStyle = theme.hill1;
+        ctx.beginPath();
+        ctx.moveTo(0, CANVAS_HEIGHT);
+        const hillOffset1 = (this.cameraX * 0.15) % CANVAS_WIDTH;
+        for (let x = -CANVAS_WIDTH; x <= CANVAS_WIDTH * 2; x += 120) {
+          ctx.quadraticCurveTo(x - hillOffset1 + 60, GROUND_Y - 90, x - hillOffset1 + 120, GROUND_Y - 20);
+        }
+        ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.lineTo(0, CANVAS_HEIGHT);
+        ctx.fill();
+
+        // Fluffy Clouds
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        this.clouds.forEach(c => {
+          c.x -= c.sp;
+          if (c.x < -150) c.x = CANVAS_WIDTH + 150;
+          this.drawCloud(ctx, c.x, c.y, c.s);
+        });
+
+        // Nearer Parallax Hills / Trees (Layer 2)
+        ctx.fillStyle = theme.hill2;
+        ctx.beginPath();
+        ctx.moveTo(0, CANVAS_HEIGHT);
+        const hillOffset2 = (this.cameraX * 0.35) % CANVAS_WIDTH;
+        for (let x = -CANVAS_WIDTH; x <= CANVAS_WIDTH * 2; x += 160) {
+          ctx.quadraticCurveTo(x - hillOffset2 + 80, GROUND_Y - 50, x - hillOffset2 + 160, GROUND_Y);
+        }
+        ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.lineTo(0, CANVAS_HEIGHT);
+        ctx.fill();
+      }
+
+      drawCloud(ctx, x, y, scale = 1.0) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.arc(14, -8, 20, 0, Math.PI * 2);
+        ctx.arc(32, -4, 16, 0, Math.PI * 2);
+        ctx.arc(42, 4, 14, 0, Math.PI * 2);
+        ctx.arc(18, 8, 16, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawGround(ctx, theme) {
+        // Draw normal ground in segments, skipping pits
+        let curX = -100;
+        const endX = this.levelLength + 400;
+
+        // Sort pits by start
+        const sortedPits = [...this.pits].sort((a, b) => a.start - b.start);
+
+        for (const pit of sortedPits) {
+          if (pit.start > curX) {
+            this.drawGroundSegment(ctx, curX, pit.start, theme);
+          }
+          curX = Math.max(curX, pit.end);
+        }
+
+        if (curX < endX) {
+          this.drawGroundSegment(ctx, curX, endX, theme);
+        }
+      }
+
+      drawGroundSegment(ctx, startX, endX, theme) {
+        const segW = endX - startX;
+        if (segW <= 0) return;
+
+        // Top Grass/Sand surface
+        ctx.fillStyle = theme.groundTop;
+        ctx.fillRect(startX, GROUND_Y, segW, 14);
+
+        // Dirt underlayer
+        ctx.fillStyle = theme.groundDirt;
+        ctx.fillRect(startX, GROUND_Y + 14, segW, CANVAS_HEIGHT - (GROUND_Y + 14));
+
+        // Subtle dirt brick pattern
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        for (let bx = Math.floor(startX / 32) * 32; bx < endX; bx += 32) {
+          for (let by = GROUND_Y + 16; by < CANVAS_HEIGHT; by += 20) {
+            ctx.fillRect(bx, by, 30, 18);
+          }
+        }
+      }
+
+      // ==========================================
+      // HUD (HEADS-UP DISPLAY)
+      // ==========================================
+      drawHUD(ctx, theme) {
+        ctx.save();
+
+        // Top HUD Bar Glass container
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+        ctx.fillRect(16, 12, CANVAS_WIDTH - 32, 46);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(16, 12, CANVAS_WIDTH - 32, 46);
+
+        // Player 1 Stats
+        ctx.font = 'bold 12px "Press Start 2P", monospace';
+        ctx.fillStyle = '#60a5fa';
+        ctx.fillText('P1', 30, 32);
+
+        // P1 Hearts
+        let heartsP1 = '';
+        for (let i = 0; i < 3; i++) {
+          heartsP1 += i < this.p1.lives ? '❤️' : '🖤';
+        }
+        ctx.font = '14px sans-serif';
+        ctx.fillText(heartsP1, 62, 34);
+
+        // P1 Carrots & Score
+        ctx.font = 'bold 11px "Press Start 2P", monospace';
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText(`🥕${this.p1.carrotsCollected}  ${this.p1.score}`, 125, 33);
+
+        // Player 2 Stats (if active)
+        if (this.isTwoPlayer) {
+          ctx.fillStyle = '#f87171';
+          ctx.fillText('P2', 290, 32);
+
+          let heartsP2 = '';
+          for (let i = 0; i < 3; i++) {
+            heartsP2 += i < this.p2.lives ? '❤️' : '🖤';
+          }
+          ctx.font = '14px sans-serif';
+          ctx.fillText(heartsP2, 322, 34);
+
+          ctx.font = 'bold 11px "Press Start 2P", monospace';
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillText(`🥕${this.p2.carrotsCollected}  ${this.p2.score}`, 385, 33);
+        }
+
+        // Center Stage Indicator
+        ctx.font = 'bold 10px "Press Start 2P", monospace';
+        ctx.fillStyle = '#f8fafc';
+        ctx.textAlign = 'center';
+        ctx.fillText(theme.shortName.toUpperCase(), CANVAS_WIDTH / 2, 28);
+
+        // Stage progress bar
+        const progW = 120;
+        const progX = CANVAS_WIDTH / 2 - progW / 2;
+        const progY = 36;
+        const p1Dist = Math.max(0, Math.min(1, this.p1.x / this.levelLength));
+
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillRect(progX, progY, progW, 6);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(progX, progY, progW * p1Dist, 6);
+
+        // High Score
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '9px "Press Start 2P", monospace';
+        ctx.fillText(`HI: ${this.highScore}`, CANVAS_WIDTH - 30, 32);
+
+        // Active Combo Badge
+        if (this.comboCount > 1) {
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#f59e0b';
+          ctx.font = 'bold 12px "Press Start 2P", monospace';
+          ctx.fillText(`COMBO x${this.comboCount}!`, 30, 80);
+        }
+
+        ctx.restore();
+      }
+
+      // ==========================================
+      // MENUS & OVERLAY SCREENS
+      // ==========================================
+      drawMenuScreen(ctx) {
+        // Darkened glass backdrop
+        ctx.fillStyle = 'rgba(8, 7, 17, 0.88)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // Game Logo Title
+        ctx.save();
+        ctx.textAlign = 'center';
+
+        const bounce = Math.sin(Date.now() / 250) * 8;
+        ctx.font = 'bold 36px "Press Start 2P", monospace';
+        ctx.fillStyle = '#f59e0b';
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 18;
+        ctx.fillText('RABBIT RUNNER', CANVAS_WIDTH / 2, 110 + bounce);
+
+        ctx.shadowBlur = 0;
+        ctx.font = 'bold 13px "Outfit", sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.letterSpacing = '2px';
+        ctx.fillText('★ 16-BIT RETRO PLATFORMER ADVENTURE ★', CANVAS_WIDTH / 2, 150 + bounce);
+
+        // Animated Rabbits Preview
+        const time = Date.now() / 150;
+        const hopP1 = Math.abs(Math.sin(time)) * 14;
+        const hopP2 = Math.abs(Math.cos(time)) * 14;
+
+        // Draw animated rabbit 1
+        this.p1.x = CANVAS_WIDTH / 2 - 80;
+        this.p1.y = 175 - hopP1;
+        this.p1.facing = 1;
+        this.p1.draw(ctx);
+
+        // Draw animated rabbit 2
+        this.p2.x = CANVAS_WIDTH / 2 + 50;
+        this.p2.y = 175 - hopP2;
+        this.p2.facing = -1;
+        this.p2.draw(ctx);
+
+        // "1 Player" Button
+        this.drawArcadeButton(ctx, 250, 230, 300, 50, '1 PLAYER (WASD)', '#2563eb', '#60a5fa');
+
+        // "2 Player Co-op" Button
+        this.drawArcadeButton(ctx, 250, 300, 300, 50, '2 PLAYER CO-OP', '#d97706', '#fbbf24');
+
+        // High Score
+        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(`🏆 TOP HIGH SCORE: ${this.highScore}`, CANVAS_WIDTH / 2, 385);
+
+        ctx.font = '11px "Outfit", sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('Press WASD or Arrow Keys &bull; Collect Carrots &bull; Defeat Stage Bosses', CANVAS_WIDTH / 2, 420);
+
+        ctx.restore();
+      }
+
+      drawPauseScreen(ctx) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 28px "Press Start 2P", monospace';
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('GAME PAUSED', CANVAS_WIDTH / 2, 140);
+
+        this.drawArcadeButton(ctx, 300, 190, 200, 44, 'RESUME', '#16a34a', '#4ade80');
+        this.drawArcadeButton(ctx, 300, 250, 200, 44, 'RESTART', '#2563eb', '#60a5fa');
+        this.drawArcadeButton(ctx, 300, 310, 200, 44, 'MAIN MENU', '#475569', '#94a3b8');
+
+        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText('Press ESC to Resume', CANVAS_WIDTH / 2, 390);
+
+        ctx.restore();
+      }
+
+      drawStageClearScreen(ctx) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        ctx.save();
+        ctx.textAlign = 'center';
+
+        ctx.font = 'bold 26px "Press Start 2P", monospace';
+        ctx.fillStyle = '#4ade80';
+        ctx.shadowColor = '#22c55e';
+        ctx.shadowBlur = 14;
+        ctx.fillText(`STAGE ${this.currentStage} CLEARED!`, CANVAS_WIDTH / 2, 130);
+        ctx.shadowBlur = 0;
+
+        ctx.font = '13px "Outfit", sans-serif';
+        ctx.fillStyle = '#f8fafc';
+        const totalCarrots = this.p1.carrotsCollected + (this.isTwoPlayer ? this.p2.carrotsCollected : 0);
+        const totalScore = this.p1.score + (this.isTwoPlayer ? this.p2.score : 0);
+        ctx.fillText(`Total Carrots Collected: 🥕 ${totalCarrots}`, CANVAS_WIDTH / 2, 180);
+        ctx.fillText(`Current Team Score: ⭐️ ${totalScore}`, CANVAS_WIDTH / 2, 210);
+
+        const nextLabel = this.currentStage < this.maxStages
+          ? `CONTINUE TO STAGE ${this.currentStage + 1}`
+          : 'VIEW VICTORY';
+        this.drawArcadeButton(ctx, 250, 280, 300, 52, nextLabel, '#16a34a', '#4ade80');
+
+        ctx.restore();
+      }
+
+      drawGameOverScreen(ctx) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        ctx.save();
+        ctx.textAlign = 'center';
+
+        ctx.font = 'bold 30px "Press Start 2P", monospace';
+        ctx.fillStyle = '#ef4444';
+        ctx.shadowColor = '#dc2626';
+        ctx.shadowBlur = 16;
+        ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, 140);
+        ctx.shadowBlur = 0;
+
+        const totalScore = this.p1.score + (this.isTwoPlayer ? this.p2.score : 0);
+        ctx.font = '11px "Press Start 2P", monospace';
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(`FINAL SCORE: ${totalScore}`, CANVAS_WIDTH / 2, 200);
+
+        if (totalScore >= this.highScore && totalScore > 0) {
+          ctx.fillStyle = '#facc15';
+          ctx.fillText('★ NEW HIGH SCORE! ★', CANVAS_WIDTH / 2, 235);
+        } else {
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText(`BEST SCORE: ${this.highScore}`, CANVAS_WIDTH / 2, 235);
+        }
+
+        this.drawArcadeButton(ctx, 280, 280, 240, 48, 'TRY AGAIN', '#2563eb', '#60a5fa');
+        this.drawArcadeButton(ctx, 280, 345, 240, 45, 'MAIN MENU', '#475569', '#94a3b8');
+
+        ctx.restore();
+      }
+
+      drawVictoryScreen(ctx) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        ctx.save();
+        ctx.textAlign = 'center';
+
+        ctx.font = 'bold 26px "Press Start 2P", monospace';
+        ctx.fillStyle = '#facc15';
+        ctx.shadowColor = '#eab308';
+        ctx.shadowBlur = 20;
+        ctx.fillText('VICTORY!', CANVAS_WIDTH / 2, 110);
+        ctx.shadowBlur = 0;
+
+        ctx.font = '12px "Press Start 2P", monospace';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('ALL 3 STAGES COMPLETED!', CANVAS_WIDTH / 2, 150);
+
+        ctx.font = '13px "Outfit", sans-serif';
+        ctx.fillStyle = '#f8fafc';
+        const totalScore = this.p1.score + (this.isTwoPlayer ? this.p2.score : 0);
+        const totalCarrots = this.p1.carrotsCollected + (this.isTwoPlayer ? this.p2.carrotsCollected : 0);
+        ctx.fillText('You saved the Carrot Kingdom from the Fox Overlords! 👑', CANVAS_WIDTH / 2, 195);
+        ctx.fillText(`Total Carrots: 🥕 ${totalCarrots}  |  Total Score: ⭐️ ${totalScore}`, CANVAS_WIDTH / 2, 225);
+
+        this.drawArcadeButton(ctx, 280, 280, 240, 48, 'PLAY AGAIN', '#16a34a', '#4ade80');
+        this.drawArcadeButton(ctx, 280, 345, 240, 45, 'MAIN MENU', '#475569', '#94a3b8');
+
+        ctx.restore();
+      }
+
+      drawArcadeButton(ctx, x, y, w, h, text, colorDark, colorLight) {
+        ctx.save();
+        // Drop shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.roundRect(x, y + 4, w, h, 12);
+        ctx.fill();
+
+        // Main button body
+        const grad = ctx.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, colorLight);
+        grad.addColorStop(1, colorDark);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, 12);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Label
+        ctx.font = 'bold 11px "Press Start 2P", monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+
+        ctx.restore();
+      }
+
+      // 60FPS Game Loop
+      loop() {
+        this.update();
+        this.draw();
+        requestAnimationFrame(() => this.loop());
+      }
+    }
+
+    // Initialize Game
+    window.addEventListener('DOMContentLoaded', () => {
+      const game = new RabbitRunnerGame();
+      game.loop();
+    });
+
+  })();
+  </script>
+</body>
+</html>
