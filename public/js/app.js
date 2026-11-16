@@ -80,12 +80,8 @@ function switchTab(tabId) {
     }
   } else if (actualTabId === 'participants' && window.participantsModule) {
     window.participantsModule.loadParticipants();
-  } else if (actualTabId === 'sessions' && window.sessionsModule) {
-    window.sessionsModule.loadSessions();
   } else if (actualTabId === 'logs' && window.logsModule) {
     window.logsModule.loadLogs();
-  } else if (actualTabId === 'reports' && window.reportsModule) {
-    window.reportsModule.loadReport();
   }
 }
 window.switchTab = switchTab;
@@ -99,9 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
     datePicker.addEventListener('change', () => {
       // Reload active modules
       if (window.dashboardModule) window.dashboardModule.loadDashboardData();
-      if (window.sessionsModule) window.sessionsModule.loadSessions();
       if (window.logsModule) window.logsModule.loadLogs();
-      if (window.reportsModule) window.reportsModule.loadReport();
+      if (window.foodManagerModule) window.foodManagerModule.loadFoodData();
+      if (window.foodsCatalogModule) window.foodsCatalogModule.loadCatalog();
     });
   }
 
@@ -136,9 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.dashboardModule) window.dashboardModule.init();
   if (window.scannerModule) window.scannerModule.init();
   if (window.participantsModule) window.participantsModule.init();
-  if (window.sessionsModule) window.sessionsModule.init();
   if (window.logsModule) window.logsModule.init();
-  if (window.reportsModule) window.reportsModule.init();
 
   // 6. Sound toggle
   const soundToggle = document.getElementById('setting-sound-toggle');

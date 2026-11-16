@@ -114,19 +114,9 @@
           <span>Master Peserta (dprii-001..006)</span>
         </button>
 
-        <button data-tab="sessions" class="nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
-          <i class="fa-solid fa-bowl-food text-amber-400"></i>
-          <span>Jadwal Prasmanan</span>
-        </button>
-
         <button data-tab="logs" class="nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
           <i class="fa-solid fa-clipboard-check text-indigo-400"></i>
           <span>Log Riwayat Audit</span>
-        </button>
-
-        <button data-tab="reports" class="nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
-          <i class="fa-solid fa-file-invoice-dollar text-teal-400"></i>
-          <span>Laporan & Food Waste</span>
         </button>
 
         <button data-tab="settings" class="nav-tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all">
@@ -621,25 +611,7 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 4: SESI & MENU PRASMANAN -->
-    <!-- ========================================================= -->
-    <section id="tab-sessions" class="tab-content hidden space-y-6">
-      
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-black text-white">Jadwal Sesi & Prasmanan</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Kelola jam makan (Sarapan, Siang, Snack, Malam) dan porsi buffer prasmanan.</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="sessions-cards-grid">
-        <!-- Dynamic Session Cards -->
-      </div>
-
-    </section>
-
-    <!-- ========================================================= -->
-    <!-- TAB 5: LOG RIWAYAT AUDIT -->
+    <!-- TAB 4: LOG RIWAYAT AUDIT -->
     <!-- ========================================================= -->
     <section id="tab-logs" class="tab-content hidden space-y-6">
 
@@ -682,45 +654,7 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 6: LAPORAN & FOOD WASTE -->
-    <!-- ========================================================= -->
-    <section id="tab-reports" class="tab-content hidden space-y-6">
-
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-black text-white">Analisis Efisiensi & Food Waste</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Laporan pemborosan katering, efisiensi anggaran, dan matriks kehadiran makan.</p>
-        </div>
-
-        <button onclick="reportsModule.exportReport()" class="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5">
-          <i class="fa-solid fa-file-excel"></i> Download Laporan (.xlsx)
-        </button>
-      </div>
-
-      <!-- KPI Waste Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="glass-panel p-5 rounded-3xl border border-slate-800 shadow-xl">
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Tingkat Efisiensi Katering</div>
-          <div class="text-3xl font-black text-emerald-400 mt-1" id="report-efficiency-rate">--%</div>
-        </div>
-        <div class="glass-panel p-5 rounded-3xl border border-slate-800 shadow-xl">
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Anggaran Makanan Terpakai</div>
-          <div class="text-2xl font-black text-white mt-1" id="report-consumed-cost">Rp --</div>
-        </div>
-        <div class="glass-panel p-5 rounded-3xl border border-slate-800 shadow-xl">
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Nilai Food Waste (Terbuang)</div>
-          <div class="text-2xl font-black text-rose-400 mt-1" id="report-wasted-cost">Rp --</div>
-        </div>
-        <div class="glass-panel p-5 rounded-3xl border border-slate-800 shadow-xl">
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Porsi Sisa Prasmanan</div>
-          <div class="text-3xl font-black text-amber-400 mt-1" id="report-wasted-portions">-- Porsi</div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ========================================================= -->
-    <!-- TAB 7: PENGATURAN SISTEM & DEPLOY VERCEL -->
+    <!-- TAB 5: PENGATURAN SISTEM & DEPLOY VERCEL -->
     <!-- ========================================================= -->
     <section id="tab-settings" class="tab-content hidden space-y-6">
 
@@ -1162,9 +1096,7 @@
   <script src="js/scanner.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/participants.js"></script>
-  <script src="js/sessions.js"></script>
   <script src="js/logs.js"></script>
-  <script src="js/reports.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
