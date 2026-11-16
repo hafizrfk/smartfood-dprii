@@ -1,132 +1,105 @@
-# 🍱 SmartFood ERP - Sistem Monitoring Konsumsi Makanan Peserta
+# 🍱 SmartFood ERP - Monitoring Konsumsi Makanan & Klasemen Peserta DPR II
 
-SmartFood ERP adalah sistem ERP terpadu untuk memonitor, mengaudit, dan mengendalikan jumlah konsumsi makanan per peserta dalam acara berskala besar, pusat pelatihan (training center/bootcamp), asrama, kantor korporat, konferensi, maupun kegiatan seminar.
-
-Aplikasi ini mengatasi 3 masalah utama manajemen katering acara:
-1. **Pencegahan Double Claim (Joki Makan)**: Memastikan setiap peserta hanya dapat mengambil makanan 1 porsi per sesi, mencegah peserta kehabisan akibat klaim ganda.
-2. **Peringatan Alergen & Diet Khusus**: Sistem scanner otomatis mendeteksi dan memberi peringatan mencolok jika peserta memiliki alergi tertentu (udang/seafood, kacang, gluten, diabetik, vegetarian/vegan).
-3. **Analisis Food Waste & Efisiensi Anggaran**: Membandingkan porsi yang dipesan ke vendor katering dengan porsi aktual yang dikonsumsi, menghitung nilai rupiah pemborosan (food waste), dan menyediakan matriks kehadiran makan antar divisi.
+SmartFood ERP adalah sistem ERP terpadu untuk mencatat, merekap, dan memonitor jumlah makanan serta snack yang dikonsumsi oleh setiap peserta. Dilengkapi dengan **Klasemen (Leaderboard)** pemakan terbanyak, rekap kuantitas per jenis makanan, serta dropdown rincian menu apa saja yang dimakan oleh masing-masing peserta.
 
 ---
 
-## 🚀 Fitur Unggulan
+## 🏆 Fitur Utama yang Telah Dibuat Sesuai Kebutuhan
 
-### 1. 📊 Dashboard Eksekutif & Live Feed
-- **KPI Real-Time**: Peserta Terdaftar, Total Porsi Terambil, Realisasi Biaya Makan (Rp), dan Jumlah Percobaan Double Claim yang berhasil digagalkan.
-- **Monitoring Ketersediaan Prasmanan**: Progres porsi terambil vs sisa porsi di buffet/dapur per sesi (Sarapan, Makan Siang, Coffee Break, Makan Malam).
-- **Grafik Interaktif (Chart.js)**: Donut Chart distribusi porsi per sesi dan Bar Chart rasio kehadiran per departemen.
-- **Live Scan Ticker**: Stream aktivitas real-time peserta yang baru saja melakukan check-in makan.
+### 1. 👥 Data Peserta DPR II & Menu Tambah Peserta
+Telah dikonfigurasi secara bawaan dengan ID dan nama peserta:
+- `dprii-001` = **Hafiz**
+- `dprii-002` = **Viko**
+- `dprii-003` = **Tiyan**
+- `dprii-004` = **Sarah**
+- `dprii-005` = **Rizka**
+- `dprii-006` = **Zahra**
 
-### 2. ⚡ Terminal Scan Cepat (Barcode, QR Code & Kamera)
-- **High-Speed Gate POS**: Didesain untuk antrean cepat katering (kurang dari 2 detik per peserta).
-- **Auto-Detect Keystroke Scanner**: Kompatibel dengan semua jenis Barcode/QR Scanner USB atau Bluetooth, cukup scan dan otomatis terverifikasi.
-- **Kamera QR Scanner**: Dukungan pemindaian langsung dari kamera ponsel atau webcam laptop (`html5-qrcode`).
-- **Efek Suara Sintetis (Web Audio API)**:
-  - 🔔 *Success Chime* saat porsi berhasil diambil.
-  - 🚨 *Dual Buzz Alert* saat terjadi percobaan klaim ganda (*Double Claim*).
-- **Peringatan Alergi Menyala**: Menampilkan banner oranye/kuning jika peserta memiliki pantangan makanan medis.
-- **Otorisasi Override Panitia**: Fitur porsi tambahan khusus dengan catatan audit alasan untuk tamu VIP atau panitia lembur.
+> ➕ **Menu Tambah Peserta**: Terdapat tombol **"+ Tambah Peserta"** di Dashboard dan Master Data untuk menambahkan peserta baru kapan saja (misal: `dprii-007` = Arif).
 
-### 3. 👥 Master Data Peserta & Cetak Kartu ID Lanyard
-- CRUD data peserta (Kode ID/Badge, Nama, Departemen, Kategori [Peserta/Panitia/VIP], No WhatsApp, Email, Preferensi Diet, Alergi).
-- **Generator Kartu Peserta Siap Cetak**: Fitur satu-klik untuk mencetak kartu lanyard ber-QR Code tajam (menggunakan `@media print` layout 2 kolom).
-- **Ekspor & Impor Massal**: Dukungan download data ke file Excel (`.xlsx`) dan impor massal dari file CSV peserta.
+### 2. 🍪 Input & Daftar Makanan / Snack
+Daftar makanan yang sudah terdaftar secara bawaan:
+- **Good Time** (🍪 Biskuit Cokelat)
+- **Momogi** (🌽 Snack Jagung Bakar)
+- **Makaroni** (🍝 Snack Makaroni Gurih)
+- **Malkist Kelapa** (🍘 Biskuit Malkist Manis)
+- **Beng-Beng** (🍫 Cokelat Wafer Karamel)
+- **Chiki Balls** (🧀 Snack Bola Keju)
 
-### 4. 🍱 Manajemen Sesi & Menu Katering
-- Pengaturan 4 sesi makan harian:
-  - Sarapan Pagi (06:30 - 09:00 WIB)
-  - Makan Siang (11:30 - 14:00 WIB)
-  - Coffee Break & Snack Sore (15:30 - 16:45 WIB)
-  - Makan Malam (18:30 - 21:00 WIB)
-- Switch kontrol buka/tutup sesi prasmanan.
-- Pencatatan vendor katering, harga per porsi, target porsi dipesan, dan deskripsi menu.
+> ➕ **Menu Tambah Jenis Makanan**: Terdapat tombol modal **"+ Tambah Makanan"** untuk memasukkan jenis snack baru lengkap dengan kategori, satuan, dan icon emoji.
 
-### 5. 📋 Log Riwayat Transaksi & Audit Trail
-- Tabel pencatatan detail tiap porsi yang diambil hingga ke detik transaksi.
-- Filter berdasarkan Tanggal, Sesi Makan, Status (Sukses, Override, Ditolak), dan Pencarian Nama.
-- Ekspor log transaksional ke Excel (`.xlsx`).
+> 🍽️ **Form Catat Makanan Dimakan (Quick POS)**: Di dashboard utama, cukup pilih nama peserta, pilih makanan yang diambil, masukkan jumlah (pcs/bungkus), lalu klik **"Catat"** -> klasemen langsung ter-update secara otomatis!
 
-### 6. 📈 Laporan Efisiensi Finansial & Food Waste
-- **Food Waste Calculator**: Menghitung berapa porsi makanan sisa dan nilai rupiah yang terbuang jika peserta tidak hadir makan.
-- **Matriks Kehadiran Divisi**: Memetakan departemen mana yang memiliki persentase makan tertinggi vs paling sering absen.
-- **Diagram Kebutuhan Diet Khusus**: Menampilkan persentase peserta Halal, Vegetarian, Vegan, Bebas Gluten, dan Rendah Gula untuk panduan order ke catering besok.
+### 3. 🥇 Dashboard Rekap & Klasemen (Leaderboard)
+- **Podium Juara 1, 2, 3**: Menampilkan Top 3 pemakan terbanyak dengan medali (🥇 Juara 1, 🥈 Juara 2, 🥉 Juara 3) dan kartu visual menarik.
+- **Tabel Peringkat Lengkap**: Menampilkan seluruh peserta diurutkan dari yang makan paling banyak ke paling sedikit.
+- **Rekap Jumlah Makanan Dimakan**:
+  - Berapa banyak **Good Time** yang sudah dimakan (misal: 9 bungkus).
+  - Berapa banyak **Momogi** yang sudah dimakan (misal: 9 pcs).
+  - Berapa banyak **Makaroni** yang sudah dimakan (misal: 5 bungkus).
+  - Berapa banyak **Malkist Kelapa** yang sudah dimakan (misal: 5 bungkus).
+  - Dilengkapi Donut Chart proporsi konsumsi antar snack.
 
----
+### 4. 🔍 Dropdown Detail per Peserta (Rincian Konsumsi)
+- Terdapat **Dropdown Pemilihan Peserta** (Hafiz, Viko, Tiyan, Sarah, Rizka, Zahra).
+- Saat salah satu peserta dipilih, sistem akan menampilkan:
+  - **Total Makanan yang Dimakan** (misal: Hafiz: 8 Makanan).
+  - **Daftar Apa Saja yang Dimakan**:
+    - 🍪 Good Time: 3 bungkus
+    - 🍝 Makaroni: 2 bungkus
+    - 🌽 Momogi: 2 pcs
+    - 🍘 Malkist Kelapa: 1 bungkus
+  - **Riwayat Waktu Transaksi**: Kapan saja peserta mengambil makanan tersebut beserta catatannya.
 
-## 🛠️ Arsitektur & Teknologi
-
-- **Backend**: Node.js & Express.js 5
-- **Database**: SQLite (via `better-sqlite3` dengan WAL Mode & ACID Transactions)
-- **Frontend**: Single Page Application (SPA) responsive dengan Tailwind CSS CDN
-- **Visualisasi Data**: Chart.js
-- **Scanner Kamera**: HTML5-QRCode
-- **Generator QR Code**: QRCode.js
-- **Audio Synthesizer**: Web Audio API (100% offline tanpa dependensi file eksternal)
-- **Spreadsheet Engine**: SheetJS (`xlsx`)
+### 5. ⚡ Terminal Scan (POS Barcode / QR Code)
+- Scan ID peserta menggunakan Barcode Scanner atau Kamera Laptop/HP.
+- Peringatan audio chime/buzzer dan pencegahan klaim ganda (*Double Claim*).
 
 ---
 
-## 📁 Struktur Direktori
+## 🚀 Panduan Upload ke GitHub & Hosting di Vercel
 
-```
-meal-monitoring-erp/
-├── data/
-│   └── meal_erp.db          # Database SQLite (auto-seed pada inisialisasi)
-├── public/
-│   ├── css/
-│   │   └── style.css        # Animasi pulse/shake & template cetak ID card
-│   ├── js/
-│   │   ├── api.js           # Client wrapper REST API
-│   │   ├── audio.js         # Synthesizer audio chime & buzzer
-│   │   ├── dashboard.js     # Logika chart & KPI eksekutif
-│   │   ├── scanner.js       # Logika scanner barcode/QR & deteksi dobel
-│   │   ├── participants.js  # CRUD peserta, impor CSV, & generator kartu QR
-│   │   ├── sessions.js      # Pengaturan jadwal & menu katering
-│   │   ├── logs.js          # Riwayat transaksi & audit log
-│   │   ├── reports.js       # Analisis Food Waste & matriks departemen
-│   │   └── app.js           # Router tab, toast notification & keyboard shortcuts
-│   └── index.html           # Tampilan antarmuka ERP
-├── database.js              # Schema SQLite, queries, & seed data awal
-├── server.js                # Express REST API Server
-├── package.json             # Dependensi & script start
-└── README.md
+Repository Git lokal sudah diinisialisasi dan di-commit pada branch `main`.
+
+### Langkah 1: Buat Repository di GitHub
+1. Buka [github.com/new](https://github.com/new) di browser Anda.
+2. Beri nama repository, misalnya: `smartfood-dpr-ii` atau `meal-monitoring-erp`.
+3. Biarkan opsi *"Initialize with README"* **tidak dicentang** (karena kita sudah punya berkas lokal).
+4. Klik **Create repository**.
+
+### Langkah 2: Push dari Terminal Anda
+Buka PowerShell di folder project:
+```powershell
+cd "C:\Users\HYPE AMD\.gemini\antigravity\scratch\meal-monitoring-erp"
+
+# Hubungkan ke repo GitHub Anda (ganti URL di bawah dengan URL repo Anda)
+git remote add origin https://github.com/hafizrfk/smartfood-dpr-ii.git
+
+# Push ke GitHub
+git push -u origin main
 ```
 
 ---
 
-## 🏃 Cara Menjalankan Project
+### Langkah 3: Deploy ke Vercel (1 Menit)
+Project ini sudah dilengkapi dengan berkas **`vercel.json`**, **`api/index.js`**, dan **`store.js`** (LocalStorage Dual-Persistence) sehingga 100% siap dihosting di Vercel tanpa perlu setup rumit:
 
-1. Buka terminal di folder project:
-   ```powershell
-   cd "C:\Users\HYPE AMD\.gemini\antigravity\scratch\meal-monitoring-erp"
-   ```
+1. Buka [vercel.com](https://vercel.com) dan login dengan akun GitHub Anda.
+2. Klik tombol **"Add New..."** -> **"Project"**.
+3. Pilih repository GitHub yang baru saja Anda push (`smartfood-dpr-ii`).
+4. Pada bagian *Framework Preset*, biarkan **Other**.
+5. Klik **"Deploy"**.
+6. Selesai! Web aplikasi Anda langsung online di URL seperti `https://smartfood-dpr-ii.vercel.app`.
 
-2. Jalankan aplikasi:
-   ```powershell
-   npm start
-   ```
-
-3. Buka browser dan akses:
-   ```
-   http://localhost:5050
-   ```
+> [!NOTE]
+> Sistem dilengkapi **Dual-Sync Storage**: Data peserta dan konsumsi tersimpan di browser via `localStorage` sekaligus server API, sehingga saat dihosting di Vercel (serverless), data Anda tetap tersimpan dan tidak akan hilang saat reload halaman.
 
 ---
 
-## 💡 Panduan Pengujian Singkat
+## 🏃 Cara Menjalankan Lokal
 
-1. **Uji Coba Scan Normal**:
-   - Klik tab **Terminal Scan (F2)**.
-   - Klik tombol demo **PST-1002 (Dewi - Vegetarian)**.
-   - Layar akan menampilkan konfirmasi porsi sukses, status diet vegetarian, serta suara chime!
-2. **Uji Coba Deteksi Double Claim (Joki Makan)**:
-   - Klik lagi tombol demo yang sama (**PST-1002**).
-   - Layar akan bergetar merah dan menampilkan: *"DOUBLE CLAIM DETECTED: Dewi Lestari sudah mengambil makanan pada sesi ini!"* disertai suara buzzer.
-3. **Uji Coba Peringatan Alergi**:
-   - Klik tombol demo **PST-1003 (Budi Santoso)**.
-   - Layar akan menampilkan kotak peringatan oranye menyala: *"⚠️ Alergi: Alergi Udang & Seafood"*.
-4. **Uji Coba Cetak Kartu ID**:
-   - Buka tab **Master Peserta & QR** -> Klik **Cetak Kartu ID & QR**.
-   - Preview kartu lanyard siap potong lengkap dengan QR code individual akan tampil.
-5. **Uji Coba Laporan Food Waste**:
-   - Buka tab **Laporan & Food Waste** untuk melihat perhitungan rupiah makanan sisa dan efisiensi katering.
+```powershell
+cd "C:\Users\HYPE AMD\.gemini\antigravity\scratch\meal-monitoring-erp"
+npm start
+```
+Buka browser pada: **`http://localhost:5050`**
